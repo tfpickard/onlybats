@@ -1,0 +1,121 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User authentication
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  username      String    @unique
+  passwordHash  String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  threads       Thread[]
+  posts         Post[]
+  chirps        Chirp[]
+  donations     Donation[]
+  votes         Vote[]
+}
+
+// Roost Board - Forum Categories
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  threads     Thread[]
+}
+
+// Roost Board - Forum Threads
+model Thread {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  content     String
+  authorId    String
+  categoryId  String
+  isPinned    Boolean  @default(false)
+  isLocked    Boolean  @default(false)
+  viewCount   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  posts       Post[]
+  votes       Vote[]
+}
+
+// Roost Board - Forum Posts (replies)
+model Post {
+  id        String   @id @default(cuid())
+  content   String
+  authorId  String
+  threadId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  thread    Thread   @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  votes     Vote[]
+}
+
+// Voting system (chirp/hiss)
+model Vote {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   // 'chirp' or 'hiss'
+  threadId  String?
+  postId    String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  thread    Thread?  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  post      Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, threadId])
+  @@unique([userId, postId])
+}
+
+// Microchirps - Microblog posts
+model Chirp {
+  id        String   @id @default(cuid())
+  content   String   // max 140 chars (enforced in app)
+  authorId  String
+  filter    String   @default("Low Drama") // 'High Sonar', 'Low Drama', 'Anti-Cape'
+  createdAt DateTime @default(now())
+
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+// Donation pledges (no real payment processing)
+model Donation {
+  id        String   @id @default(cuid())
+  userId    String
+  tier      String   // 'Single Pellet', 'Respectable Pile', 'Cathedral of Guano'
+  amount    Int      // in cents for display
+  message   String?
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Cave whispers (community bulletin messages)
+model Whisper {
+  id        String   @id @default(cuid())
+  message   String
+  createdAt DateTime @default(now())
+}
