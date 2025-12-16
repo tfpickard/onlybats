@@ -17,7 +17,7 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isPaused, setIsPaused] = useState(false)
   const [speed, setSpeed] = useState(1)
-  const [density, setDensity] = useState(0.15)
+  const [density, setDensity] = useState(0.08) // Reduced for better performance
   const [sonarSensitivity, setSonarSensitivity] = useState(0.5)
   const [wallRoughness, setWallRoughness] = useState(0.5)
   const [preset, setPreset] = useState<'random' | 'maternity-spiral' | 'guano-vortex' | 'tourist-panic' | 'cape-shadow'>('random')
@@ -32,8 +32,9 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const width = 200
-    const height = 150
+    // Reduced grid size for better performance
+    const width = 100
+    const height = 75
 
     const config: SimulationConfig = {
       width,
@@ -57,7 +58,7 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
     if (!ctx) return
 
     let lastRenderTime = 0
-    const targetFPS = 60
+    const targetFPS = 30 // Reduced for better performance
     const frameInterval = 1000 / targetFPS
 
     const animate = (currentTime: number) => {
@@ -111,45 +112,58 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
     ctx.fillStyle = '#0a0a0a'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    // Render fields
+    // Optimized field rendering - only draw significant values
+    const minFieldThreshold = 0.5
+
+    // Render guano field (batch similar intensities)
+    ctx.globalAlpha = 0.2
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         const idx = y * width + x
-        const cx = x * cellWidth
-        const cy = y * cellHeight
-
-        // Guano field (brownish haze)
-        if (guanoField[idx] > 0) {
+        if (guanoField[idx] > minFieldThreshold) {
           const intensity = Math.min(1, guanoField[idx] / 50)
-          ctx.fillStyle = `rgba(161, 98, 7, ${intensity * 0.2})`
-          ctx.fillRect(cx, cy, cellWidth, cellHeight)
+          const alpha = intensity * 0.2
+          ctx.fillStyle = `rgba(161, 98, 7, ${alpha})`
+          ctx.fillRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
         }
+      }
+    }
+    ctx.globalAlpha = 1
 
-        // Sonar field (purple dots)
-        if (sonarField[idx] > 0) {
+    // Render sonar field (simplified - no arcs, just rectangles)
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const idx = y * width + x
+        if (sonarField[idx] > minFieldThreshold) {
           const intensity = Math.min(1, sonarField[idx] / 10)
-          ctx.fillStyle = `rgba(139, 92, 246, ${intensity * 0.4})`
-          ctx.beginPath()
-          ctx.arc(cx + cellWidth / 2, cy + cellHeight / 2, cellWidth / 3, 0, Math.PI * 2)
-          ctx.fill()
-        }
-
-        // Disturbance field (red ripples)
-        if (disturbanceField[idx] > 0) {
-          const intensity = Math.min(1, disturbanceField[idx] / 50)
-          ctx.strokeStyle = `rgba(239, 68, 68, ${intensity * 0.6})`
-          ctx.lineWidth = 2
-          ctx.beginPath()
-          ctx.arc(cx + cellWidth / 2, cy + cellHeight / 2, cellWidth * intensity, 0, Math.PI * 2)
-          ctx.stroke()
+          const alpha = intensity * 0.4
+          ctx.fillStyle = `rgba(139, 92, 246, ${alpha})`
+          ctx.fillRect(x * cellWidth, y * cellHeight, cellWidth, cellHeight)
         }
       }
     }
 
-    // Render bats
+    // Render disturbance field (simplified - no arcs)
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const idx = y * width + x
+        if (disturbanceField[idx] > minFieldThreshold) {
+          const intensity = Math.min(1, disturbanceField[idx] / 50)
+          const alpha = intensity * 0.6
+          ctx.fillStyle = `rgba(239, 68, 68, ${alpha})`
+          const size = cellWidth * (1 + intensity)
+          ctx.fillRect(
+            x * cellWidth - size / 4,
+            y * cellHeight - size / 4,
+            size,
+            size
+          )
+        }
+      }
+    }
+
+    // Render bats (simplified - no shadows, simple triangles)
     ctx.fillStyle = '#a78bfa'
-    ctx.strokeStyle = '#c4b5fd'
-    ctx.lineWidth = 1
 
     for (let i = 0; i < grid.length; i++) {
       if (grid[i].occupied) {
@@ -158,7 +172,7 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
         const cx = x * cellWidth + cellWidth / 2
         const cy = y * cellHeight + cellHeight / 2
 
-        // Draw bat as small triangle with glow
+        // Simple triangle without rotation for performance
         const heading = grid[i].heading
         const angle = (heading * Math.PI) / 4
 
@@ -166,11 +180,7 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
         ctx.translate(cx, cy)
         ctx.rotate(angle)
 
-        // Glow
-        ctx.shadowColor = '#c4b5fd'
-        ctx.shadowBlur = 4
-
-        // Triangle
+        // Simple triangle (no shadow)
         ctx.beginPath()
         ctx.moveTo(0, -cellHeight / 3)
         ctx.lineTo(-cellWidth / 4, cellHeight / 4)
