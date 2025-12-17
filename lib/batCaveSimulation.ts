@@ -418,14 +418,33 @@ export function updateSimulation(
 
   // Maintain minimum population
   const minPop = Math.floor(width * height * config.density * 0.8)
-  while (activeBats < minPop) {
-    const roost = roostPoints[rng.nextInt(roostPoints.length)]
-    const idx = roost.y * width + roost.x
-    if (!newGrid[idx].occupied) {
-      newGrid[idx].occupied = true
-      newGrid[idx].heading = rng.nextInt(8) as Direction
-      newGrid[idx].energy = 5
-      activeBats++
+  let attempts = 0
+  const maxAttempts = minPop * 10 // Prevent infinite loop
+
+  while (activeBats < minPop && attempts < maxAttempts) {
+    attempts++
+
+    // Try roost points first
+    if (attempts < roostPoints.length * 3) {
+      const roost = roostPoints[attempts % roostPoints.length]
+      const idx = roost.y * width + roost.x
+      if (!newGrid[idx].occupied) {
+        newGrid[idx].occupied = true
+        newGrid[idx].heading = rng.nextInt(8) as Direction
+        newGrid[idx].energy = 5
+        activeBats++
+      }
+    } else {
+      // Fall back to random positions if roosts are full
+      const x = rng.nextInt(width)
+      const y = rng.nextInt(height)
+      const idx = y * width + x
+      if (!newGrid[idx].occupied) {
+        newGrid[idx].occupied = true
+        newGrid[idx].heading = rng.nextInt(8) as Direction
+        newGrid[idx].energy = 5
+        activeBats++
+      }
     }
   }
 
