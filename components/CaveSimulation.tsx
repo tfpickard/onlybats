@@ -162,8 +162,14 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
       }
     }
 
-    // Render bats (simplified - no shadows, simple triangles)
-    ctx.fillStyle = '#a78bfa'
+    // Render bats with Unicode bat emoji
+    const batEmojis = ['🦇', '🦇', '🦇', '🦇'] // Could add variations
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+
+    // Use larger font for better visibility
+    const fontSize = Math.max(cellWidth * 1.5, 12)
+    ctx.font = `${fontSize}px Arial`
 
     for (let i = 0; i < grid.length; i++) {
       if (grid[i].occupied) {
@@ -172,7 +178,11 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
         const cx = x * cellWidth + cellWidth / 2
         const cy = y * cellHeight + cellHeight / 2
 
-        // Simple triangle without rotation for performance
+        // Get bat emoji (vary based on energy level)
+        const energy = grid[i].energy
+        const batEmoji = batEmojis[0] // Simple for now, could add variety
+
+        // Heading-based rotation
         const heading = grid[i].heading
         const angle = (heading * Math.PI) / 4
 
@@ -180,14 +190,14 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
         ctx.translate(cx, cy)
         ctx.rotate(angle)
 
-        // Simple triangle (no shadow)
-        ctx.beginPath()
-        ctx.moveTo(0, -cellHeight / 3)
-        ctx.lineTo(-cellWidth / 4, cellHeight / 4)
-        ctx.lineTo(cellWidth / 4, cellHeight / 4)
-        ctx.closePath()
-        ctx.fill()
+        // Add glow effect for bats
+        ctx.shadowColor = '#a78bfa'
+        ctx.shadowBlur = 8
 
+        // Draw bat emoji
+        ctx.fillText(batEmoji, 0, 0)
+
+        ctx.shadowBlur = 0
         ctx.restore()
       }
     }

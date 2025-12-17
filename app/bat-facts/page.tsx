@@ -1,85 +1,23 @@
 'use client'
 
-import { useState } from 'react'
-
-interface BatFact {
-  fact: string
-  confidence: {
-    low: string
-    medium: string
-    high: string
-  }
-}
-
-const BAT_FACTS: BatFact[] = [
-  {
-    fact: 'Bats use echolocation',
-    confidence: {
-      low: 'Some bats might use sound for navigation, we think.',
-      medium: 'Bats use echolocation to navigate and find food.',
-      high: 'Bats DEFINITELY use echolocation. We verified this. Repeatedly.',
-    },
-  },
-  {
-    fact: 'Bats hang upside down',
-    confidence: {
-      low: 'Bats appear to be oriented differently than us sometimes.',
-      medium: 'Bats hang upside down when roosting.',
-      high: 'Bats hang upside down due to GRAVITY OPTIMIZATION PROTOCOLS.',
-    },
-  },
-  {
-    fact: 'Bats are mammals',
-    confidence: {
-      low: 'Bats seem similar to other furry creatures in some ways.',
-      medium: 'Bats are flying mammals.',
-      high: 'Bats are SUPERIOR MAMMALS with wings. The only true flying mammals.',
-    },
-  },
-  {
-    fact: 'Bats eat insects',
-    confidence: {
-      low: 'Some bats probably consume something. Maybe insects.',
-      medium: 'Most bats eat insects like moths and beetles.',
-      high: 'Bats consume THOUSANDS of insects per night, protecting humanity from the mosquito agenda.',
-    },
-  },
-  {
-    fact: 'Bats live in colonies',
-    confidence: {
-      low: 'Multiple bats have been observed in the same location occasionally.',
-      medium: 'Bats often live together in colonies.',
-      high: 'Bats form SOPHISTICATED MUTUAL AID COLLECTIVES with democratic governance.',
-    },
-  },
-  {
-    fact: 'Bat guano is valuable',
-    confidence: {
-      low: 'Bat waste products might have some undocumented uses.',
-      medium: 'Bat guano is used as fertilizer due to its nutrient content.',
-      high: 'Bat guano is the CORNERSTONE OF THE CIRCULAR ECONOMY. A renewable resource.',
-    },
-  },
-  {
-    fact: 'Bats are NOT blind',
-    confidence: {
-      low: 'Bats might be able to see to some degree.',
-      medium: 'Contrary to myth, bats can see quite well.',
-      high: 'Bats have EXCELLENT vision. The "blind as a bat" phrase is BIG BAT PROPAGANDA.',
-    },
-  },
-  {
-    fact: 'Bats can carry rabies',
-    confidence: {
-      low: 'Some bats may have encountered diseases at some point.',
-      medium: 'Bats can carry rabies, so avoid handling wild bats.',
-      high: 'A small percentage of bats carry rabies. DO NOT TOUCH BATS. Appreciate from a distance.',
-    },
-  },
-]
+import { useState, useEffect, useMemo } from 'react'
+import { type BatFact, getAllFacts, getRandomFacts } from '@/lib/batFacts'
 
 export default function BatFactsPage() {
   const [confidenceLevel, setConfidenceLevel] = useState<'low' | 'medium' | 'high'>('medium')
+  const [displayMode, setDisplayMode] = useState<'random' | 'all'>('random')
+  const [randomCount, setRandomCount] = useState(20)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  // Get facts based on display mode
+  const displayedFacts = useMemo(() => {
+    if (displayMode === 'all') {
+      return getAllFacts()
+    }
+    return getRandomFacts(randomCount)
+  }, [displayMode, randomCount, refreshKey])
+
+  const totalFactCount = getAllFacts().length
 
   return (
     <div className="min-h-screen py-12">
@@ -89,9 +27,62 @@ export default function BatFactsPage() {
           <h1 className="text-5xl font-bold text-bat-primary bat-glow mb-4">
             Bat Facts
           </h1>
-          <p className="text-xl text-gray-400">
+          <p className="text-xl text-gray-400 mb-2">
             Earnest but intentionally unhelpful information about bats.
           </p>
+          <p className="text-sm text-bat-secondary">
+            {totalFactCount} community-verified facts available
+          </p>
+        </div>
+
+        {/* Display Mode Controls */}
+        <div className="bg-cave-dark border border-cave-light rounded-lg p-6 mb-8">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDisplayMode('random')}
+                className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                  displayMode === 'random'
+                    ? 'bg-bat-primary text-white'
+                    : 'bg-cave-medium text-gray-400 hover:bg-cave-light border border-cave-light'
+                }`}
+              >
+                Random Selection
+              </button>
+              <button
+                onClick={() => setDisplayMode('all')}
+                className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                  displayMode === 'all'
+                    ? 'bg-bat-primary text-white'
+                    : 'bg-cave-medium text-gray-400 hover:bg-cave-light border border-cave-light'
+                }`}
+              >
+                Show All ({totalFactCount})
+              </button>
+            </div>
+
+            {displayMode === 'random' && (
+              <div className="flex gap-3 items-center">
+                <label className="text-sm text-gray-400">
+                  Facts to display:
+                  <input
+                    type="number"
+                    min="5"
+                    max={totalFactCount}
+                    value={randomCount}
+                    onChange={(e) => setRandomCount(Math.min(totalFactCount, Math.max(5, parseInt(e.target.value) || 5)))}
+                    className="ml-2 w-20 px-3 py-1 bg-cave-medium border border-cave-light rounded text-gray-300 focus:border-bat-primary focus:outline-none"
+                  />
+                </label>
+                <button
+                  onClick={() => setRefreshKey(k => k + 1)}
+                  className="px-4 py-2 bg-bat-secondary hover:bg-bat-primary text-white rounded-lg transition-colors text-sm font-medium"
+                >
+                  🔄 Shuffle
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Fact Quality Slider */}
@@ -122,7 +113,7 @@ export default function BatFactsPage() {
 
         {/* Facts */}
         <div className="space-y-6 mb-12">
-          {BAT_FACTS.map((item, i) => (
+          {displayedFacts.map((item, i) => (
             <div
               key={i}
               className="bg-cave-dark border border-bat-secondary rounded-lg p-6 hover:border-bat-primary transition-colors"
