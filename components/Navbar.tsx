@@ -7,13 +7,13 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const navLinks = [
-    { href: '/', label: 'Cave' },
-    { href: '/ascii-bats', label: 'ASCII Bats' },
-    { href: '/bat-facts', label: 'Bat Facts' },
-    { href: '/roost-board', label: 'Roost Board' },
+    { href: '/', label: 'Live Simulation' },
+    { href: '/ascii-bats', label: 'Educational Materials' },
+    { href: '/bat-facts', label: 'Bat Facts Database' },
+    { href: '/roost-board', label: 'Research Forum' },
     { href: '/microchirps', label: 'Microchirps' },
-    { href: '/donate-guano', label: 'Donate Guano' },
-    { href: '/sign-in', label: 'Sign In' },
+    { href: '/donate-guano', label: 'Support Us' },
+    { href: '/sign-in', label: 'Member Login' },
   ]
 
   return (

@@ -25,13 +25,13 @@ export default function BatFactsPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-bat-primary bat-glow mb-4">
-            Bat Facts
+            Chiropteran Facts Database
           </h1>
           <p className="text-xl text-gray-400 mb-2">
-            Earnest but intentionally unhelpful information about bats.
+            Rigorously researched scientific information about bats, presented at variable confidence intervals.
           </p>
           <p className="text-sm text-bat-secondary">
-            {totalFactCount} community-verified facts available
+            {totalFactCount} peer-reviewed facts available for public education
           </p>
         </div>
 
@@ -87,12 +87,12 @@ export default function BatFactsPage() {
 
         {/* Fact Quality Slider */}
         <div className="bg-cave-dark border border-cave-light rounded-lg p-6 mb-8">
-          <h3 className="text-bat-secondary font-bold mb-4">Fact Quality Slider</h3>
+          <h3 className="text-bat-secondary font-bold mb-4">Scientific Certainty Calibrator</h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between text-sm text-gray-400">
-              <span>Uncertain</span>
-              <span>Confident</span>
-              <span>EXTREMELY Confident</span>
+              <span>Preliminary Data</span>
+              <span>Validated Research</span>
+              <span>Established Consensus</span>
             </div>
             <input
               type="range"
@@ -106,7 +106,7 @@ export default function BatFactsPage() {
               className="w-full"
             />
             <div className="text-center text-bat-glow font-medium">
-              Current tone: {confidenceLevel.toUpperCase()}
+              Current confidence level: {confidenceLevel.toUpperCase()}
             </div>
           </div>
         </div>
@@ -129,27 +129,28 @@ export default function BatFactsPage() {
           ))}
         </div>
 
-        {/* Poser Watch Sidebar */}
+        {/* Misinformation Alert */}
         <div className="bg-cave-darkest border-2 border-yellow-600 rounded-lg p-6">
           <div className="flex items-center space-x-2 mb-4">
-            <span className="text-yellow-400 text-2xl">🔭</span>
-            <h3 className="text-yellow-400 font-bold text-xl">POSER WATCH</h3>
+            <span className="text-yellow-400 text-2xl">⚠️</span>
+            <h3 className="text-yellow-400 font-bold text-xl">PUBLIC AWARENESS NOTICE</h3>
           </div>
           <div className="space-y-3 text-sm text-gray-400">
             <p>
-              <strong className="text-yellow-300">Status:</strong> ACTIVE
+              <strong className="text-yellow-300">Alert Level:</strong> ELEVATED
             </p>
             <p>
-              Recent sighting: A cape-wearing influencer was spotted claiming to understand "bat symbolism"
-              while providing zero actual bat facts.
+              Recent observation: Media personalities continue to associate chiropteran imagery with
+              non-scientific narratives, undermining public bat education efforts and conflating
+              costume-based entertainment with legitimate conservation work.
             </p>
             <p>
-              <strong className="text-yellow-300">Reminder:</strong> Real bat work doesn't require a utility belt.
-              Just echolocation and community support.
+              <strong className="text-yellow-300">Advisory:</strong> Authentic bat research requires
+              evidence-based methodology, not theatrical accessories or billionaire funding models.
             </p>
             <p className="pt-4 border-t border-yellow-900">
               <a href="/poser-watch" className="text-bat-secondary hover:text-bat-glow underline">
-                Report cape sightings →
+                Submit misinformation reports →
               </a>
             </p>
           </div>
@@ -157,8 +158,8 @@ export default function BatFactsPage() {
 
         {/* Footer note */}
         <div className="mt-8 text-center text-gray-500 text-sm">
-          <p>All facts are presented in good faith with varying levels of certainty.</p>
-          <p className="mt-2">No affiliation with Big Bat or their anti-bat agenda.</p>
+          <p>All data presented has been curated through our rigorous fact-verification protocols.</p>
+          <p className="mt-2">OnlyBats.org maintains strict independence from all corporate wildlife entertainment enterprises.</p>
         </div>
       </div>
     </div>

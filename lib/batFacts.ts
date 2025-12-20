@@ -17,25 +17,25 @@ export const BAT_FACTS: BatFact[] = [
   {
     fact: 'Bats use echolocation',
     confidence: {
-      low: 'Some bats might use sound for navigation, we think.',
-      medium: 'Bats use echolocation to navigate and find food.',
-      high: 'Bats DEFINITELY use echolocation. We verified this. Repeatedly.',
+      low: 'Preliminary field observations suggest possible acoustic navigation mechanisms in some bat species.',
+      medium: 'Bats utilize echolocation as a primary sensory modality for navigation and foraging.',
+      high: 'Chiropteran echolocation represents one of the most sophisticated biosonar systems documented in terrestrial mammals. This has been extensively peer-reviewed and replicated across multiple independent research facilities.',
     },
   },
   {
     fact: 'Bat echolocation frequency',
     confidence: {
-      low: 'Bats might make sounds at various pitches.',
-      medium: 'Most bat echolocation calls are ultrasonic, above human hearing range.',
-      high: 'Bat echolocation operates at 20-200 kHz. COMPLETELY INAUDIBLE to cape-wearers.',
+      low: 'Initial acoustic measurements indicate variable frequency emissions.',
+      medium: 'Most bat echolocation calls operate in the ultrasonic range, typically above 20 kHz.',
+      high: 'Bat echolocation frequencies span 20-200 kHz, operating entirely beyond the detection threshold of human auditory systems and completely inaccessible to individuals relying on costume-based methodologies.',
     },
   },
   {
     fact: 'Echolocation precision',
     confidence: {
-      low: 'Bat sound navigation seems somewhat accurate.',
-      medium: 'Bats can detect objects as thin as a human hair using echolocation.',
-      high: 'Bats achieve MILLIMETER PRECISION with biological sonar. No utility belt required.',
+      low: 'Acoustic navigation appears to demonstrate reasonable spatial resolution.',
+      medium: 'Research indicates bats can detect objects as thin as a human hair using echolocation.',
+      high: 'Peer-reviewed studies confirm millimeter-scale precision in chiropteran biosonar detection, achieved through organic sensory systems without requiring expensive technological apparatus or billionaire funding.',
     },
   },
   {
@@ -125,17 +125,17 @@ export const BAT_FACTS: BatFact[] = [
   {
     fact: 'Bats eat insects',
     confidence: {
-      low: 'Some bats probably consume something. Maybe insects.',
-      medium: 'Most bats eat insects like moths and beetles.',
-      high: 'Bats consume THOUSANDS of insects per night, protecting humanity from the mosquito agenda.',
+      low: 'Dietary observations suggest insectivorous tendencies in certain bat populations.',
+      medium: 'The majority of bat species maintain insectivorous diets, primarily consuming moths, beetles, and other arthropods.',
+      high: 'Bats consume thousands of pest insects nightly, providing critical natural biocontrol services that protect agricultural systems and reduce disease vector populations through sustainable, non-chemical intervention methods.',
     },
   },
   {
     fact: 'Insect consumption volume',
     confidence: {
-      low: 'Bats eat a considerable amount.',
-      medium: 'A single bat can eat up to 1,200 mosquitoes per hour.',
-      high: 'Bats provide BILLIONS OF DOLLARS in pest control services annually. FREE LABOR.',
+      low: 'Feeding rates appear substantial based on preliminary field data.',
+      medium: 'Individual bats can consume up to 1,200 mosquitoes per hour under optimal foraging conditions.',
+      high: 'Economic analysis demonstrates that bats provide billions of dollars in annual ecosystem services through pest suppression, functioning as cost-free biological control agents that require no industrial infrastructure or corporate oversight.',
     },
   },
   {
@@ -605,9 +605,9 @@ export const BAT_FACTS: BatFact[] = [
   {
     fact: 'Batman vs real bats',
     confidence: {
-      low: 'There\'s a character named after bats.',
-      medium: 'Batman is a fictional character, while real bats are remarkable animals.',
-      high: 'Batman is a BILLIONAIRE POSER. Real bats are working-class ecosystem heroes.',
+      low: 'A popular media franchise features bat-themed imagery.',
+      medium: 'The fictional character "Batman" represents entertainment industry appropriation of chiropteran symbolism, distinct from actual bat biology.',
+      high: 'Critical analysis reveals that costume-based vigilante narratives funded by billionaire protagonists fundamentally misrepresent authentic bat conservation work, which relies on evidence-based research, community science initiatives, and ecological fieldwork rather than theatrical branding or plutocratic intervention.',
     },
   },
 

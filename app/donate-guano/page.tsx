@@ -6,38 +6,38 @@ import { useSearchParams } from 'next/navigation'
 const DONATION_TIERS = [
   {
     id: 'single-pellet',
-    name: 'Single Pellet',
+    name: 'Foundational Supporter',
     amount: 500, // $5
-    description: 'A small but meaningful contribution to the guano economy',
+    description: 'Essential baseline contribution to our nutrient-cycling economic model',
     benefits: [
-      'Warm feeling of supporting real bats',
-      'Knowledge that your pellet matters',
-      'One digital "thank you" chirp',
+      'Verified donor recognition in organizational records',
+      'Digital acknowledgment via automated gratitude protocol',
+      'Contribution to sustainable bat research funding infrastructure',
     ],
   },
   {
     id: 'respectable-pile',
-    name: 'Respectable Pile',
+    name: 'Research Sustainer',
     amount: 2000, // $20
-    description: 'A substantial pile that shows commitment',
+    description: 'Substantial investment in evidence-based conservation operations',
     benefits: [
-      'All Single Pellet benefits',
-      'Recognition in the cave whispers',
-      'Exclusive "Guano Contributor" badge',
-      'Advance notice of colony events',
+      'All Foundational Supporter benefits',
+      'Public acknowledgment in community communications archive',
+      'Official "Conservation Contributor" designation',
+      'Priority notification of research developments and organizational updates',
     ],
   },
   {
     id: 'cathedral-of-guano',
-    name: 'Cathedral of Guano',
+    name: 'Legacy Patron',
     amount: 10000, // $100
-    description: 'An architectural marvel of support',
+    description: 'Transformative philanthropic commitment to chiropteran science',
     benefits: [
-      'All Respectable Pile benefits',
-      'Your name in the Cave of Honor',
-      'Lifetime "Guano Architect" status',
-      'Personal thank-you from a community moderator',
-      'Priority access to new bat facts',
+      'All Research Sustainer benefits',
+      'Permanent recognition in OnlyBats donor registry',
+      'Lifetime "Research Architect" status with professional credential',
+      'Direct appreciation correspondence from senior research staff',
+      'Exclusive early access to peer-reviewed findings and data releases',
     ],
   },
 ]
@@ -121,11 +121,11 @@ function DonateGuanoContent() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-bat-primary bat-glow mb-4">
-            Donate Guano
+            Support OnlyBats Research
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            This keeps the cave lights off and the bats on.
-            Community-funded. No corporate sponsors. No cape money.
+            Your contribution sustains critical bat conservation infrastructure and scientific research operations.
+            100% donor-funded. Independent from corporate wildlife entertainment enterprises.
           </p>
         </div>
 
@@ -198,22 +198,24 @@ function DonateGuanoContent() {
         {/* Success/Canceled messages */}
         {showSuccess && (
           <div className="mb-8 bg-green-900/20 border-2 border-green-500 rounded-lg p-6 text-center">
-            <div className="text-4xl mb-3">🦇✨</div>
+            <div className="text-4xl mb-3">✓</div>
             <h3 className="text-2xl font-bold text-green-400 mb-2">
-              DONATION SUCCESSFUL!
+              Contribution Confirmed
             </h3>
             <p className="text-gray-300">
-              Thank you for supporting the bat community! Your contribution helps keep the cave
-              lights off and the bats on. No capes required.
+              Your donation has been processed successfully. Thank you for supporting evidence-based
+              bat conservation and research. Your contribution directly enables our critical mission to
+              advance chiropteran science through community-funded infrastructure.
             </p>
           </div>
         )}
 
         {showCanceled && (
           <div className="mb-8 bg-yellow-900/20 border-2 border-yellow-500 rounded-lg p-6 text-center">
-            <div className="text-4xl mb-3">🦇</div>
+            <div className="text-4xl mb-3">⚠️</div>
             <p className="text-gray-300">
-              Donation canceled. No worries! The bats will still appreciate you from afar.
+              Donation process canceled. We understand. Your consideration of supporting our
+              research mission is appreciated regardless of transaction completion.
             </p>
           </div>
         )}
@@ -240,34 +242,36 @@ function DonateGuanoContent() {
         {/* Info boxes */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-cave-dark border border-cave-light rounded-lg p-6">
-            <h3 className="text-bat-secondary font-bold mb-3">Where Does This Go?</h3>
+            <h3 className="text-bat-secondary font-bold mb-3">Fund Allocation</h3>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li>• Server costs (keeping the cave online)</li>
-              <li>• Community moderation</li>
-              <li>• Bat fact research and verification</li>
-              <li>• ASCII art development</li>
-              <li>• Anti-cape surveillance operations</li>
+              <li>• Digital infrastructure maintenance and hosting services</li>
+              <li>• Volunteer moderator coordination and support</li>
+              <li>• Scientific fact-checking and peer review processes</li>
+              <li>• Educational resource development and distribution</li>
+              <li>• Misinformation monitoring and public awareness initiatives</li>
             </ul>
           </div>
 
           <div className="bg-cave-darkest border-2 border-bat-primary rounded-lg p-6">
-            <h3 className="text-bat-primary font-bold mb-3">The Guano Economy</h3>
+            <h3 className="text-bat-primary font-bold mb-3">Our Funding Philosophy</h3>
             <p className="text-sm text-gray-400 mb-3">
-              Guano is a renewable resource. By contributing to the guano economy,
-              you're participating in the circular, sustainable model that bats have
-              perfected over millions of years.
+              OnlyBats operates on a sustainable, nutrient-cycling economic model inspired by
+              natural bat ecosystems. Your contributions circulate through our organization
+              to support evidence-based conservation work that mirrors the efficient,
+              renewable resource management that chiropteran colonies have refined over
+              millions of years of evolutionary optimization.
             </p>
             <p className="text-xs text-gray-500">
-              No billionaires. No capes. Just mutual aid.
+              Grassroots funding model. No corporate entertainment partnerships.
             </p>
           </div>
         </div>
 
         {/* Disclaimer */}
         <div className="mt-8 text-center text-gray-500 text-xs">
-          <p>Real payments are processed securely through Stripe.</p>
-          <p className="mt-2">Independent from Big Bat and their anti-bat agenda.</p>
-          <p className="mt-2">100% of donations go to bat conservation efforts (minus payment processing fees).</p>
+          <p>All transactions processed securely through Stripe payment infrastructure.</p>
+          <p className="mt-2">OnlyBats maintains strict financial independence from all commercial wildlife media enterprises.</p>
+          <p className="mt-2">100% of donations fund bat conservation and research (excluding standard payment processing fees).</p>
         </div>
       </div>
     </div>
