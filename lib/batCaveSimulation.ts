@@ -293,18 +293,75 @@ export function updateSimulation(
     disturbanceField[i] *= 0.9
   }
 
-  // Phase 4: Steering and movement
+  // Phase 4: Enhanced Steering and Movement with Flocking Behavior
   const newGrid: BatCell[] = grid.map((cell) => ({ ...cell }))
 
+  // First pass: Calculate neighborhood information for flocking
+  const neighborhoodRadius = 5
+  const flockingInfo: Array<{
+    nearbyCount: number
+    avgHeading: number
+    centerX: number
+    centerY: number
+  }> = []
+
+  for (let i = 0; i < grid.length; i++) {
+    if (!grid[i].occupied) {
+      flockingInfo.push({ nearbyCount: 0, avgHeading: 0, centerX: 0, centerY: 0 })
+      continue
+    }
+
+    const x = i % width
+    const y = Math.floor(i / width)
+
+    let nearbyCount = 0
+    let headingSum = 0
+    let centerX = 0
+    let centerY = 0
+
+    // Check neighborhood
+    for (let dy = -neighborhoodRadius; dy <= neighborhoodRadius; dy++) {
+      for (let dx = -neighborhoodRadius; dx <= neighborhoodRadius; dx++) {
+        const nx = x + dx
+        const ny = y + dy
+        if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+          const nidx = ny * width + nx
+          if (grid[nidx].occupied && nidx !== i) {
+            const dist = Math.sqrt(dx * dx + dy * dy)
+            if (dist <= neighborhoodRadius) {
+              nearbyCount++
+              headingSum += grid[nidx].heading
+              centerX += nx
+              centerY += ny
+            }
+          }
+        }
+      }
+    }
+
+    if (nearbyCount > 0) {
+      flockingInfo.push({
+        nearbyCount,
+        avgHeading: headingSum / nearbyCount,
+        centerX: centerX / nearbyCount,
+        centerY: centerY / nearbyCount,
+      })
+    } else {
+      flockingInfo.push({ nearbyCount: 0, avgHeading: grid[i].heading, centerX: x, centerY: y })
+    }
+  }
+
+  // Second pass: Movement with flocking behavior
   for (let i = 0; i < grid.length; i++) {
     if (!grid[i].occupied) continue
 
     const x = i % width
     const y = Math.floor(i / width)
     const cell = grid[i]
+    const flock = flockingInfo[i]
 
-    // Calculate steering preferences
-    const turnOptions = [-1, 0, 1] // left, straight, right
+    // Calculate steering preferences with flocking
+    const turnOptions = [-2, -1, 0, 1, 2] // Extended turn options for better maneuverability
     const scores: number[] = []
 
     for (const turn of turnOptions) {
@@ -314,24 +371,48 @@ export function updateSimulation(
       const nx = x + dx
       const ny = y + dy
 
-      // Wall avoidance
+      // Wall avoidance (strong)
       if (nx < 0 || nx >= width || ny < 0 || ny >= height) {
-        score -= 100
+        score -= 200
       } else {
         const nidx = ny * width + nx
 
-        // Collision avoidance
+        // Collision avoidance (strong)
         if (grid[nidx].occupied) {
-          score -= 50
+          score -= 100
         }
 
-        // Avoid high sonar (crowding)
-        score -= sonarField[nidx] * 2
+        // FLOCKING BEHAVIORS:
 
-        // Flee disturbance
-        score -= disturbanceField[nidx] * 3
+        // 1. Alignment: Prefer to move in same direction as neighbors
+        if (flock.nearbyCount > 0) {
+          const headingDiff = Math.abs(newHeading - flock.avgHeading)
+          const alignmentBonus = Math.max(0, 8 - headingDiff)
+          score += alignmentBonus * 3
+        }
 
-        // Prefer guano gradient perpendicular (swirl)
+        // 2. Cohesion: Move toward center of nearby flock
+        if (flock.nearbyCount > 2) {
+          const toCenterX = flock.centerX - x
+          const toCenterY = flock.centerY - y
+          const centerAngle = Math.atan2(toCenterY, toCenterX)
+          const targetHeading = Math.round((centerAngle / (Math.PI * 2)) * 8) % 8
+          const cohesionDiff = Math.abs(newHeading - targetHeading)
+          score += Math.max(0, 8 - cohesionDiff) * 2
+        }
+
+        // 3. Separation: Avoid getting too close (checked via sonar)
+        const crowdedness = sonarField[nidx]
+        if (crowdedness > 5) {
+          score -= crowdedness * 4 // Strong separation
+        } else if (crowdedness > 2) {
+          score -= crowdedness * 2 // Moderate separation
+        }
+
+        // 4. Flee disturbance (strong avoidance)
+        score -= disturbanceField[nidx] * 5
+
+        // 5. Prefer guano trails perpendicular (swirling behavior)
         const perpHeading1 = ((newHeading + 2) % 8) as Direction
         const perpHeading2 = ((newHeading + 6) % 8) as Direction
         const [pdx1, pdy1] = DIRECTION_VECTORS[perpHeading1]
@@ -343,26 +424,33 @@ export function updateSimulation(
         const py2 = ny + pdy2
 
         if (px1 >= 0 && px1 < width && py1 >= 0 && py1 < height) {
-          score += guanoField[py1 * width + px1] * 0.1
+          score += guanoField[py1 * width + px1] * 0.15
         }
         if (px2 >= 0 && px2 < width && py2 >= 0 && py2 < height) {
-          score += guanoField[py2 * width + px2] * 0.1
+          score += guanoField[py2 * width + px2] * 0.15
+        }
+
+        // 6. Energy-based behavior: tired bats seek roost
+        if (cell.energy < 3) {
+          // Prefer edges (roosting spots)
+          const distToEdge = Math.min(x, width - x, y, height - y)
+          score += (10 - distToEdge) * 0.5
         }
       }
 
-      // Add tiny noise
-      score += (rng.next() - 0.5) * wallRoughness * 5
+      // Add controlled randomness for natural variation
+      score += (rng.next() - 0.5) * wallRoughness * 8
 
       scores.push(score)
     }
 
-    // Softmax selection
+    // Softmax selection for smooth probabilistic movement
     const maxScore = Math.max(...scores)
-    const expScores = scores.map((s) => Math.exp((s - maxScore) / 5))
+    const expScores = scores.map((s) => Math.exp((s - maxScore) / 8))
     const sumExp = expScores.reduce((a, b) => a + b, 0)
     const probabilities = expScores.map((e) => e / sumExp)
 
-    // Select turn
+    // Select turn based on probabilities
     const rand = rng.next()
     let cumProb = 0
     let selectedTurn = 0
@@ -379,21 +467,21 @@ export function updateSimulation(
     const nx = x + dx
     const ny = y + dy
 
-    // Movement
+    // Execute movement
     if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
       const nidx = ny * width + nx
       if (!newGrid[nidx].occupied) {
-        // Move
+        // Successful move: gain energy
         newGrid[i].occupied = false
         newGrid[nidx].occupied = true
         newGrid[nidx].heading = newHeading
         newGrid[nidx].energy = Math.min(7, cell.energy + 1)
       } else {
-        // Stuck
+        // Blocked: lose energy
         newGrid[i].energy = Math.max(0, cell.energy - 1)
       }
     } else {
-      // Hit wall
+      // Hit wall: lose energy
       newGrid[i].energy = Math.max(0, cell.energy - 1)
     }
   }

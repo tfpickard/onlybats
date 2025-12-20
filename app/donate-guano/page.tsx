@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 const DONATION_TIERS = [
   {
@@ -41,16 +42,77 @@ const DONATION_TIERS = [
   },
 ]
 
-export default function DonateGuanoPage() {
+function DonateGuanoContent() {
+  const searchParams = useSearchParams()
   const [selectedTier, setSelectedTier] = useState<string | null>(null)
   const [customAmount, setCustomAmount] = useState('')
   const [message, setMessage] = useState('')
-  const [pledged, setPledged] = useState(false)
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [showSuccess, setShowSuccess] = useState(false)
+  const [showCanceled, setShowCanceled] = useState(false)
 
-  const handlePledge = () => {
-    // No real payment processing - just store the intent
-    setPledged(true)
-    setTimeout(() => setPledged(false), 5000)
+  // Check for success/canceled query params
+  useEffect(() => {
+    if (searchParams.get('success') === 'true') {
+      setShowSuccess(true)
+      setTimeout(() => setShowSuccess(false), 10000)
+    }
+    if (searchParams.get('canceled') === 'true') {
+      setShowCanceled(true)
+      setTimeout(() => setShowCanceled(false), 5000)
+    }
+  }, [searchParams])
+
+  const handleDonate = async () => {
+    setIsProcessing(true)
+
+    try {
+      // Determine donation details
+      let tierId: string
+      let customAmountCents: number | undefined
+
+      if (selectedTier) {
+        tierId = selectedTier
+      } else if (customAmount) {
+        tierId = 'custom'
+        customAmountCents = Math.round(parseFloat(customAmount) * 100)
+      } else {
+        alert('Please select a tier or enter a custom amount')
+        setIsProcessing(false)
+        return
+      }
+
+      // Create checkout session
+      const response = await fetch('/api/donate/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          tierId,
+          customAmount: customAmountCents,
+          message: message.trim() || undefined,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to create checkout session')
+      }
+
+      const { url } = await response.json()
+
+      // Redirect to Stripe Checkout
+      if (url) {
+        window.location.href = url
+      } else {
+        throw new Error('No checkout URL received')
+      }
+    } catch (error) {
+      console.error('Donation error:', error)
+      alert(error instanceof Error ? error.message : 'Failed to process donation')
+      setIsProcessing(false)
+    }
   }
 
   return (
@@ -133,20 +195,46 @@ export default function DonateGuanoPage() {
           </div>
         </div>
 
-        {/* Pledge button */}
+        {/* Success/Canceled messages */}
+        {showSuccess && (
+          <div className="mb-8 bg-green-900/20 border-2 border-green-500 rounded-lg p-6 text-center">
+            <div className="text-4xl mb-3">🦇✨</div>
+            <h3 className="text-2xl font-bold text-green-400 mb-2">
+              DONATION SUCCESSFUL!
+            </h3>
+            <p className="text-gray-300">
+              Thank you for supporting the bat community! Your contribution helps keep the cave
+              lights off and the bats on. No capes required.
+            </p>
+          </div>
+        )}
+
+        {showCanceled && (
+          <div className="mb-8 bg-yellow-900/20 border-2 border-yellow-500 rounded-lg p-6 text-center">
+            <div className="text-4xl mb-3">🦇</div>
+            <p className="text-gray-300">
+              Donation canceled. No worries! The bats will still appreciate you from afar.
+            </p>
+          </div>
+        )}
+
+        {/* Donate button */}
         <div className="text-center mb-12">
           <button
-            onClick={handlePledge}
-            disabled={!selectedTier && !customAmount}
+            onClick={handleDonate}
+            disabled={(!selectedTier && !customAmount) || isProcessing}
             className="px-8 py-4 bg-bat-primary hover:bg-bat-secondary text-white text-xl font-bold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
-            {pledged ? '✓ PLEDGE RECORDED' : 'PLEDGE GUANO'}
+            {isProcessing ? 'PROCESSING...' : 'DONATE WITH STRIPE'}
           </button>
-          {pledged && (
+          {isProcessing && (
             <p className="mt-4 text-bat-glow animate-pulse">
-              Thank you for supporting the bat community!
+              Redirecting to secure payment...
             </p>
           )}
+          <p className="mt-4 text-sm text-gray-500">
+            Powered by Stripe • Secure payment processing
+          </p>
         </div>
 
         {/* Info boxes */}
@@ -177,10 +265,23 @@ export default function DonateGuanoPage() {
 
         {/* Disclaimer */}
         <div className="mt-8 text-center text-gray-500 text-xs">
-          <p>This is a simulated donation system. No real payments are processed.</p>
+          <p>Real payments are processed securely through Stripe.</p>
           <p className="mt-2">Independent from Big Bat and their anti-bat agenda.</p>
+          <p className="mt-2">100% of donations go to bat conservation efforts (minus payment processing fees).</p>
         </div>
       </div>
     </div>
+  )
+}
+
+export default function DonateGuanoPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-bat-primary text-xl">Loading...</div>
+      </div>
+    }>
+      <DonateGuanoContent />
+    </Suspense>
   )
 }
