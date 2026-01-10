@@ -215,6 +215,26 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
         const energy = grid[i].energy
         const batEmoji = batEmojis[0] // Simple for now, could add variety
 
+        // Color based on leader gravity (0 = follower, 1 = leader)
+        const gravity = grid[i].leaderGravity
+        // Gradient: dim gray-blue (followers) -> purple (mid) -> bright yellow (leaders)
+        let color: string
+        if (gravity < 0.5) {
+          // 0 to 0.5: gray-blue to purple
+          const t = gravity * 2 // 0 to 1
+          const r = Math.floor(107 + (167 - 107) * t)
+          const g = Math.floor(114 + (139 - 114) * t)
+          const b = Math.floor(128 + (246 - 128) * t)
+          color = `rgb(${r}, ${g}, ${b})`
+        } else {
+          // 0.5 to 1: purple to bright yellow
+          const t = (gravity - 0.5) * 2 // 0 to 1
+          const r = Math.floor(167 + (251 - 167) * t)
+          const g = Math.floor(139 + (191 - 139) * t)
+          const b = Math.floor(246 + (36 - 246) * t)
+          color = `rgb(${r}, ${g}, ${b})`
+        }
+
         // Heading-based rotation
         const heading = grid[i].heading
         const angle = (heading * Math.PI) / 4
@@ -223,11 +243,12 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
         ctx.translate(cx, cy)
         ctx.rotate(angle)
 
-        // Add glow effect for bats
-        ctx.shadowColor = '#a78bfa'
-        ctx.shadowBlur = 8
+        // Add glow effect colored by leader gravity
+        ctx.shadowColor = color
+        ctx.shadowBlur = 8 + gravity * 8 // Stronger glow for leaders
 
-        // Draw bat emoji
+        // Draw bat emoji with color filter
+        ctx.fillStyle = color
         ctx.fillText(batEmoji, 0, 0)
 
         ctx.shadowBlur = 0
