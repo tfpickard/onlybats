@@ -11,7 +11,7 @@ const DONATION_TIERS = [
     description: 'Every bit helps support our bat conservation work',
     benefits: [
       'Our sincere thanks',
-      'Know you're helping protect bats',
+      "Know you're helping protect bats",
       'Digital thank-you note',
     ],
   },
@@ -268,7 +268,7 @@ function DonateGuanoContent() {
         {/* Disclaimer */}
         <div className="mt-8 text-center text-gray-500 text-xs">
           <p>Secure payment processing by Stripe.</p>
-          <p className="mt-2">We're independent—no corporate sponsors or entertainment industry partnerships.</p>
+          <p className="mt-2">{"We're independent—no corporate sponsors or entertainment industry partnerships."}</p>
           <p className="mt-2">100% of your donation goes to bat conservation (minus payment processing fees).</p>
         </div>
       </div>
