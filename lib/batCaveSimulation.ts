@@ -140,7 +140,7 @@ function initMaternitySpiral(
     if (x >= 0 && x < width && y >= 0 && y < height) {
       const idx = y * width + x
       grid[idx].occupied = true
-      grid[idx].heading = Math.floor((angle / (Math.PI * 2)) * 8) as Direction
+      grid[idx].heading = (Math.floor((angle / (Math.PI * 2)) * 8) % 8) as Direction
       grid[idx].energy = 5
     }
   }
@@ -167,7 +167,7 @@ function initGuanoVortex(
       const idx = y * width + x
       grid[idx].occupied = true
       // Heading perpendicular to radius (vortex)
-      grid[idx].heading = Math.floor(((angle + Math.PI / 2) / (Math.PI * 2)) * 8) as Direction
+      grid[idx].heading = (Math.floor(((angle + Math.PI / 2) / (Math.PI * 2)) * 8) % 8) as Direction
       grid[idx].energy = 5
     }
   }
