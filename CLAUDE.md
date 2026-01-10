@@ -2,16 +2,19 @@
 
 ## Project Overview
 
-OnlyBats.org is a Next.js 14 parody website celebrating bats and gently mocking Batman/cape-based branding. The project uses TypeScript, Tailwind CSS, Prisma, and NextAuth.js, optimized for Vercel deployment.
+OnlyBats.org is a Next.js 14 website presenting itself as a serious bat conservation and research organization. The humor is entirely unintentional - the site takes itself extremely seriously while pursuing questionable priorities (like monitoring Batman as a "misinformation threat"). The project uses TypeScript, Tailwind CSS, Prisma, and NextAuth.js, optimized for Vercel deployment.
 
 ## Development Guidelines
 
 ### Tone & Voice
-- **Grassroots, scrappy, community-run** energy
-- **Mildly conspiratorial** about "Big Bat" and "anti-bat agenda"
-- **Playful satire**, never hateful or harassing
-- Subtle digs at Batman as a "poser" and "cape influencer"
-- Keep it light: "Real bats do the work. Capes are just theater."
+- **Sincere and accessible** - sounds like a real 501(c)(3) nonprofit, not an obvious parody
+- **Clear and straightforward** - avoid jargon, use simple language that real people use
+- **Unintentionally funny** - the humor comes from WHAT they're doing (monitoring Batman), not HOW they say it
+- **No self-awareness** - genuinely believes media monitoring is part of their conservation mission
+- **Think NPR, not academic journal** - professional but relatable, like Nina Totenberg reporting on bats
+- Avoid: "chiropteran," "evidence-based methodology," "peer-reviewed" (unless actually warranted)
+- Use: "bat," "research," "science," "conservation" - normal nonprofit language
+- **Let readers choose to support them** - engage, don't preach or coerce
 
 ### Code Patterns
 
@@ -93,21 +96,27 @@ OnlyBats.org is a Next.js 14 parody website celebrating bats and gently mocking 
 ### Adding a New Page
 1. Create `app/new-page/page.tsx`
 2. Add link to `components/Navbar.tsx`
-3. Maintain grassroots tone
-4. Test mobile responsiveness
+3. Maintain overly-serious, academic tone
+4. Use scientific/conservation language throughout
+5. Test mobile responsiveness
 
 ### Adding Bat Facts
-Edit `app/bat-facts/page.tsx`:
+Edit `lib/batFacts.ts`:
 ```typescript
 {
   fact: 'Short fact label',
   confidence: {
-    low: 'Uncertain phrasing...',
-    medium: 'Confident phrasing...',
-    high: 'EXTREMELY confident phrasing...',
+    low: 'Preliminary/tentative phrasing with scientific hedging...',
+    medium: 'Confident academic phrasing with research citations implied...',
+    high: 'EXTREMELY confident with superlatives, presenting absurd details with complete seriousness...',
   },
 }
 ```
+
+**Tone Guidelines for Facts:**
+- **Low**: Use tentative academic language ("observations suggest," "preliminary data indicates")
+- **Medium**: Use confident research language ("studies demonstrate," "research confirms")
+- **High**: Use absurdly confident language with complete earnestness about mundane/absurd topics ("peer-reviewed studies DEFINITIVELY confirm..." even about trivial bat behaviors)
 
 ### Modifying Simulation Rules
 Edit `lib/batCaveSimulation.ts`:
@@ -215,12 +224,22 @@ types if missing.
 
 ## Key Design Principles
 
-1. **Bats First**: All content is bat-themed, never breaks character
-2. **Grassroots Tone**: Community-run, scrappy, independent energy
-3. **Vercel-Optimized**: No long-lived connections, serverless-friendly
-4. **Performance**: Smooth simulation, fast page loads, optimized bundles
-5. **Satire, Not Hate**: Playful mockery, never harassing or mean-spirited
-6. **Accessible**: Works without JavaScript where possible, responsive design
+1. **Chiroptera-Centric Mission**: All content focuses on bat conservation and research; maintains scientific character at all times
+2. **Overly-Serious Presentation**: Presents as legitimate nonprofit; takes absurd priorities (Batman monitoring) with complete earnestness
+3. **Unintentional Humor**: Never winks at the audience; genuinely believes monitoring costume-based entertainment is important conservation work
+4. **Academic Language**: Uses rigorous, evidence-based terminology; "peer-reviewed," "scientifically validated," "evidence-based methodology"
+5. **Vercel-Optimized**: No long-lived connections, serverless-friendly
+6. **Performance**: Smooth simulation, fast page loads, optimized bundles
+7. **No Self-Awareness**: Implicitly validates questionable priorities without stepping back to question them
+8. **Accessible**: Works without JavaScript where possible, responsive design
+
+## Content Guidelines
+
+- **Always serious, never playful**: This is a real conservation organization (in the site's mind)
+- **Batman monitoring is legitimate work**: Treat "misinformation monitoring" with the same gravity as actual bat research
+- **"Guano economy" is scientific**: Present the nutrient-cycling economic model as serious conservation philosophy
+- **No jokes or satire markers**: The humor comes from taking everything too seriously, not from being self-aware
+- **Validate the absurd**: Never question whether monitoring Batman makes sense; it's obviously important bat conservation work
 
 ## External Resources
 
@@ -232,4 +251,4 @@ types if missing.
 
 ---
 
-**Remember**: No capes. No billionaires. Just bats. 🦇
+**Mission Statement**: Evidence-based chiropteran conservation through rigorous scientific methodology and community-supported research infrastructure.

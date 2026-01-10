@@ -6,38 +6,38 @@ import { useSearchParams } from 'next/navigation'
 const DONATION_TIERS = [
   {
     id: 'single-pellet',
-    name: 'Single Pellet',
+    name: 'Friend of Bats',
     amount: 500, // $5
-    description: 'A small but meaningful contribution to the guano economy',
+    description: 'Every bit helps support our bat conservation work',
     benefits: [
-      'Warm feeling of supporting real bats',
-      'Knowledge that your pellet matters',
-      'One digital "thank you" chirp',
+      'Our sincere thanks',
+      "Know you're helping protect bats",
+      'Digital thank-you note',
     ],
   },
   {
     id: 'respectable-pile',
-    name: 'Respectable Pile',
+    name: 'Bat Champion',
     amount: 2000, // $20
-    description: 'A substantial pile that shows commitment',
+    description: 'Make a meaningful impact on bat conservation',
     benefits: [
-      'All Single Pellet benefits',
-      'Recognition in the cave whispers',
-      'Exclusive "Guano Contributor" badge',
-      'Advance notice of colony events',
+      'All Friend of Bats benefits',
+      'Name listed on our supporters page',
+      'Bat conservation updates',
+      'Early access to new educational content',
     ],
   },
   {
     id: 'cathedral-of-guano',
-    name: 'Cathedral of Guano',
+    name: 'Bat Guardian',
     amount: 10000, // $100
-    description: 'An architectural marvel of support',
+    description: 'Join our most dedicated supporters',
     benefits: [
-      'All Respectable Pile benefits',
-      'Your name in the Cave of Honor',
-      'Lifetime "Guano Architect" status',
-      'Personal thank-you from a community moderator',
-      'Priority access to new bat facts',
+      'All Bat Champion benefits',
+      'Permanent recognition in our annual report',
+      'Special supporter badge',
+      'Personal thank-you from our team',
+      'First look at research findings',
     ],
   },
 ]
@@ -121,11 +121,11 @@ function DonateGuanoContent() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-bat-primary bat-glow mb-4">
-            Donate Guano
+            Support Bat Conservation
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            This keeps the cave lights off and the bats on.
-            Community-funded. No corporate sponsors. No cape money.
+            Your donation helps us protect bats through research, education, and community outreach.
+            We're 100% donor-funded and independent.
           </p>
         </div>
 
@@ -198,22 +198,24 @@ function DonateGuanoContent() {
         {/* Success/Canceled messages */}
         {showSuccess && (
           <div className="mb-8 bg-green-900/20 border-2 border-green-500 rounded-lg p-6 text-center">
-            <div className="text-4xl mb-3">🦇✨</div>
+            <div className="text-4xl mb-3">✓</div>
             <h3 className="text-2xl font-bold text-green-400 mb-2">
-              DONATION SUCCESSFUL!
+              Contribution Confirmed
             </h3>
             <p className="text-gray-300">
-              Thank you for supporting the bat community! Your contribution helps keep the cave
-              lights off and the bats on. No capes required.
+              Your donation has been processed successfully. Thank you for supporting evidence-based
+              bat conservation and research. Your contribution directly enables our critical mission to
+              advance chiropteran science through community-funded infrastructure.
             </p>
           </div>
         )}
 
         {showCanceled && (
           <div className="mb-8 bg-yellow-900/20 border-2 border-yellow-500 rounded-lg p-6 text-center">
-            <div className="text-4xl mb-3">🦇</div>
+            <div className="text-4xl mb-3">⚠️</div>
             <p className="text-gray-300">
-              Donation canceled. No worries! The bats will still appreciate you from afar.
+              Donation process canceled. We understand. Your consideration of supporting our
+              research mission is appreciated regardless of transaction completion.
             </p>
           </div>
         )}
@@ -240,34 +242,34 @@ function DonateGuanoContent() {
         {/* Info boxes */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-cave-dark border border-cave-light rounded-lg p-6">
-            <h3 className="text-bat-secondary font-bold mb-3">Where Does This Go?</h3>
+            <h3 className="text-bat-secondary font-bold mb-3">Where Your Money Goes</h3>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li>• Server costs (keeping the cave online)</li>
-              <li>• Community moderation</li>
-              <li>• Bat fact research and verification</li>
-              <li>• ASCII art development</li>
-              <li>• Anti-cape surveillance operations</li>
+              <li>• Website hosting and maintenance</li>
+              <li>• Volunteer coordination</li>
+              <li>• Educational content creation</li>
+              <li>• Research and fact-checking</li>
+              <li>• Media monitoring program</li>
             </ul>
           </div>
 
           <div className="bg-cave-darkest border-2 border-bat-primary rounded-lg p-6">
-            <h3 className="text-bat-primary font-bold mb-3">The Guano Economy</h3>
+            <h3 className="text-bat-primary font-bold mb-3">How We Work</h3>
             <p className="text-sm text-gray-400 mb-3">
-              Guano is a renewable resource. By contributing to the guano economy,
-              you're participating in the circular, sustainable model that bats have
-              perfected over millions of years.
+              We run on donations from people who care about bats. Your support helps us maintain
+              this community, create educational resources, and track how bats are portrayed in media.
+              Everything we do is focused on bat conservation.
             </p>
             <p className="text-xs text-gray-500">
-              No billionaires. No capes. Just mutual aid.
+              Community-funded and independent.
             </p>
           </div>
         </div>
 
         {/* Disclaimer */}
         <div className="mt-8 text-center text-gray-500 text-xs">
-          <p>Real payments are processed securely through Stripe.</p>
-          <p className="mt-2">Independent from Big Bat and their anti-bat agenda.</p>
-          <p className="mt-2">100% of donations go to bat conservation efforts (minus payment processing fees).</p>
+          <p>Secure payment processing by Stripe.</p>
+          <p className="mt-2">{"We're independent—no corporate sponsors or entertainment industry partnerships."}</p>
+          <p className="mt-2">100% of your donation goes to bat conservation (minus payment processing fees).</p>
         </div>
       </div>
     </div>

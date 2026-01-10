@@ -5,10 +5,10 @@ export default function MicrochirpsPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-bat-primary bat-glow mb-4">
-            Microchirps
+            Microchirps Research Feed
           </h1>
           <p className="text-xl text-gray-400">
-            140-character bat microblog. Filter by sonar level and drama quotient.
+            140-character professional microblogging platform. Content categorization for optimal knowledge dissemination.
           </p>
         </div>
 
@@ -16,17 +16,18 @@ export default function MicrochirpsPage() {
         <div className="bg-yellow-900 bg-opacity-20 border-2 border-yellow-600 rounded-lg p-8 text-center mb-12">
           <div className="text-6xl mb-4">🔒</div>
           <h2 className="text-2xl font-bold text-yellow-400 mb-4">
-            Colony Membership Required
+            Authenticated Research Access Required
           </h2>
           <p className="text-yellow-200 mb-6 max-w-2xl mx-auto">
-            Microchirps is available only to verified colony members.
-            This prevents cape-themed spam and maintains the integrity of bat discourse.
+            The Microchirps platform requires verified membership to ensure content quality standards.
+            Access controls prevent contamination from non-scientific sources and maintain
+            the academic integrity of chiropteran discourse.
           </p>
           <a
             href="/sign-in"
             className="inline-block px-8 py-3 bg-bat-primary hover:bg-bat-secondary text-white font-bold rounded-lg transition-colors"
           >
-            Sign In to Chirp
+            Professional Login Portal
           </a>
         </div>
 
@@ -35,17 +36,17 @@ export default function MicrochirpsPage() {
           <h3 className="text-bat-secondary font-bold mb-4">Available Filters</h3>
           <div className="flex flex-wrap gap-3">
             <div className="px-4 py-2 bg-purple-900 bg-opacity-30 border border-purple-500 rounded-lg text-purple-300">
-              🔊 High Sonar
+              🔊 High Impact Research
             </div>
             <div className="px-4 py-2 bg-green-900 bg-opacity-30 border border-green-500 rounded-lg text-green-300">
-              🌿 Low Drama
+              🌿 Data-Focused Content
             </div>
             <div className="px-4 py-2 bg-red-900 bg-opacity-30 border border-red-500 rounded-lg text-red-300">
-              🚫 Anti-Cape
+              🚫 Misinformation Alerts
             </div>
           </div>
           <p className="text-gray-500 text-sm mt-4">
-            Use filters to curate your chirp feed based on content type and tone.
+            Advanced content categorization enables efficient knowledge filtering and priority-based feed curation.
           </p>
         </div>
 
@@ -115,14 +116,14 @@ export default function MicrochirpsPage() {
 
         {/* Info */}
         <div className="mt-12 bg-cave-dark border border-cave-light rounded-lg p-6">
-          <h3 className="text-bat-secondary font-bold mb-3">Microchirps Guidelines</h3>
+          <h3 className="text-bat-secondary font-bold mb-3">Platform Usage Standards</h3>
           <ul className="space-y-2 text-sm text-gray-400">
-            <li>• Maximum 140 characters per chirp</li>
-            <li>• Select appropriate filter when posting</li>
-            <li>• No cape-themed content</li>
-            <li>• Stay factual or clearly mark speculation</li>
-            <li>• Be constructive, not just critical</li>
-            <li>• Report spam and poser infiltration</li>
+            <li>• Strict 140-character limit for optimal information density</li>
+            <li>• Mandatory content categorization via filter selection</li>
+            <li>• Prohibited: entertainment industry references, non-scientific branding</li>
+            <li>• Evidence-based assertions required; speculation must be explicitly labeled</li>
+            <li>• Constructive peer review encouraged over dismissive criticism</li>
+            <li>• Active reporting of misinformation and non-scientific content infiltration</li>
           </ul>
         </div>
       </div>

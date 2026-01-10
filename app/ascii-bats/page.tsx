@@ -450,10 +450,10 @@ export default function AsciiBatsPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-bat-primary bat-glow mb-4">
-            ASCII Bats
+            Educational ASCII Resources
           </h1>
           <p className="text-xl text-gray-400">
-            Terminal flyer panel. Print these bats. Staple them to telephone poles.
+            Text-based chiropteran visual aids for public education and community outreach. Optimized for print distribution and grassroots awareness campaigns.
           </p>
         </div>
 
@@ -513,31 +513,31 @@ export default function AsciiBatsPage() {
             onClick={handleCopy}
             className="px-8 py-4 bg-bat-primary hover:bg-bat-secondary text-white text-xl font-bold rounded-lg transition-colors shadow-lg"
           >
-            {copied ? '✓ COPIED!' : 'PRINT THESE BATS'}
+            {copied ? '✓ COPIED TO CLIPBOARD' : 'COPY EDUCATIONAL MATERIALS'}
           </button>
           {copied && (
             <p className="mt-4 text-bat-glow animate-pulse">
-              Staple it to a telephone pole.
+              Ready for print distribution to community bulletin boards.
             </p>
           )}
         </div>
 
         {/* Info */}
         <div className="bg-cave-dark border border-cave-light rounded-lg p-6">
-          <h3 className="text-bat-secondary font-bold mb-3">Distribution Guidelines</h3>
+          <h3 className="text-bat-secondary font-bold mb-3">Public Distribution Protocols</h3>
           <ul className="space-y-2 text-gray-400 text-sm">
-            <li>• Print on recycled paper (bats respect the ecosystem)</li>
-            <li>• Staple to community boards, telephone poles, and cave entrances</li>
-            <li>• Do not distribute at cape-themed events</li>
-            <li>• If questioned, simply state: "It's about the bats"</li>
-            <li>• No affiliation with costumed vigilantes</li>
+            <li>• Utilize recycled paper stock to align with ecological conservation values</li>
+            <li>• Approved posting locations: community bulletin boards, public information kiosks, research facility notice areas</li>
+            <li>• Avoid distribution at entertainment industry venues or costume-themed gatherings</li>
+            <li>• When questioned by public: "This is educational material about chiropteran conservation"</li>
+            <li>• Materials are independent from commercial wildlife entertainment enterprises</li>
           </ul>
         </div>
 
         {/* More bats info */}
         <div className="mt-8 text-center text-gray-500 text-sm">
-          <p>These ASCII bats are community-created and community-funded.</p>
-          <p className="mt-2">Independent from Big Bat and their anti-bat agenda.</p>
+          <p>All ASCII resources developed through volunteer community collaboration and donor-supported operations.</p>
+          <p className="mt-2">OnlyBats maintains financial and organizational independence from corporate media franchises.</p>
         </div>
       </div>
     </div>

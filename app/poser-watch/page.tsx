@@ -24,49 +24,51 @@ export default function PoserWatchPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="text-6xl mb-4">🔭</div>
+          <div className="text-6xl mb-4">📊</div>
           <h1 className="text-5xl font-bold text-yellow-400 mb-4">
-            POSER WATCH
+            Media Monitoring Program
           </h1>
           <p className="text-xl text-gray-400">
-            Report cape sightings and protect the integrity of bat culture
+            Tracking how bats are portrayed in movies, TV, and other media
           </p>
           <div className="mt-4 inline-block bg-yellow-900 bg-opacity-30 border border-yellow-600 rounded-lg px-6 py-2">
-            <span className="text-yellow-400 font-bold">STATUS: ACTIVE 🦇🔭</span>
+            <span className="text-yellow-400 font-bold">STATUS: ACTIVE</span>
           </div>
         </div>
 
         {/* Mission statement */}
         <div className="bg-cave-dark border-2 border-yellow-600 rounded-lg p-6 mb-8">
-          <h2 className="text-yellow-400 font-bold text-2xl mb-4">Our Mission</h2>
+          <h2 className="text-yellow-400 font-bold text-2xl mb-4">Why We Monitor</h2>
           <p className="text-gray-300 mb-4">
-            Cape-based branding is not echolocation. Real bat work doesn't require a utility belt.
-            We monitor and document instances of bat culture appropriation by cape-wearing influencers.
+            How bats appear in popular media affects public perception. When movies and TV shows
+            get bat biology wrong, it can harm conservation efforts. People might fear bats unnecessarily
+            or misunderstand their ecological importance.
           </p>
           <p className="text-gray-400 text-sm">
-            This is a grassroots effort to preserve authentic bat appreciation and prevent
-            the commodification of bat symbolism by billionaire cosplayers.
+            We track these portrayals to understand their impact and provide accurate information.
+            This includes monitoring major franchises that use bat imagery—even when those portrayals
+            don't actually involve real bat biology or conservation.
           </p>
         </div>
 
         {/* Report form */}
         <div className="bg-cave-dark border border-cave-light rounded-lg p-8 mb-8">
-          <h3 className="text-bat-secondary font-bold text-xl mb-6">Submit a Sighting</h3>
+          <h3 className="text-bat-secondary font-bold text-xl mb-6">Submit a Report</h3>
 
           {reportSubmitted ? (
             <div className="bg-green-900 bg-opacity-20 border-2 border-green-600 rounded-lg p-6 text-center">
               <div className="text-4xl mb-4">✓</div>
               <h4 className="text-green-400 font-bold text-xl mb-2">Report Received</h4>
               <p className="text-green-300 text-sm">
-                Thank you for your vigilance. The colony appreciates your contribution
-                to protecting bat culture from poser infiltration.
+                Thanks for your submission. We'll review it and add it to our monitoring database.
+                Your help tracking bat portrayals in media supports our education efforts.
               </p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="location" className="block text-bat-secondary text-sm font-medium mb-2">
-                  Location of Sighting
+                  Where did you see this?
                 </label>
                 <input
                   type="text"
@@ -75,13 +77,13 @@ export default function PoserWatchPage() {
                   onChange={(e) => setLocation(e.target.value)}
                   required
                   className="w-full px-4 py-2 bg-cave-medium border border-cave-light rounded-lg text-gray-300 focus:border-bat-primary focus:outline-none"
-                  placeholder="e.g., Comic convention, social media, billboard"
+                  placeholder="e.g., Movie theater, Netflix, billboard, social media"
                 />
               </div>
 
               <div>
                 <label htmlFor="cape-color" className="block text-bat-secondary text-sm font-medium mb-2">
-                  Cape Color (if applicable)
+                  Type of portrayal (if applicable)
                 </label>
                 <select
                   id="cape-color"
@@ -89,18 +91,18 @@ export default function PoserWatchPage() {
                   onChange={(e) => setCapeColor(e.target.value)}
                   className="w-full px-4 py-2 bg-cave-medium border border-cave-light rounded-lg text-gray-300 focus:border-bat-primary focus:outline-none"
                 >
-                  <option value="">Select color...</option>
-                  <option value="black">Black (classic poser)</option>
-                  <option value="red">Red</option>
-                  <option value="blue">Blue</option>
-                  <option value="other">Other</option>
-                  <option value="no-cape">No cape (suspicious)</option>
+                  <option value="">Select type...</option>
+                  <option value="black">Costumed character</option>
+                  <option value="red">Vampire bat (horror)</option>
+                  <option value="blue">Cartoon/animated</option>
+                  <option value="other">Other fictional</option>
+                  <option value="no-cape">Documentary/educational</option>
                 </select>
               </div>
 
               <div>
                 <label htmlFor="description" className="block text-bat-secondary text-sm font-medium mb-2">
-                  Description of Incident
+                  What was inaccurate?
                 </label>
                 <textarea
                   id="description"
@@ -109,7 +111,7 @@ export default function PoserWatchPage() {
                   required
                   rows={6}
                   className="w-full px-4 py-2 bg-cave-medium border border-cave-light rounded-lg text-gray-300 focus:border-bat-primary focus:outline-none"
-                  placeholder="Describe the poser activity. Include details about bat symbolism misuse, false claims of bat knowledge, or appropriation of echolocation concepts..."
+                  placeholder="Describe what the media got wrong about bats. Include details about incorrect biology, behavior, or habitat information..."
                 />
               </div>
 
@@ -117,7 +119,7 @@ export default function PoserWatchPage() {
                 type="submit"
                 className="w-full bg-yellow-600 hover:bg-yellow-500 text-black font-bold py-3 rounded-lg transition-colors"
               >
-                SUBMIT REPORT
+                Submit Report
               </button>
             </form>
           )}
@@ -125,23 +127,23 @@ export default function PoserWatchPage() {
 
         {/* Recent sightings */}
         <div className="bg-cave-dark border border-cave-light rounded-lg p-6">
-          <h3 className="text-bat-secondary font-bold text-xl mb-4">Recent Verified Sightings</h3>
+          <h3 className="text-bat-secondary font-bold text-xl mb-4">Recent Reports</h3>
           <div className="space-y-4">
             {[
               {
                 date: '2024-01-15',
-                location: 'Movie premiere',
-                description: 'Individual in cape claimed to "understand bats" while providing zero actual bat facts.',
+                location: 'Superhero movie premiere',
+                description: 'Film featured bat-themed character who claimed special understanding of bats but included no accurate bat biology or conservation messaging.',
               },
               {
                 date: '2024-01-10',
                 location: 'Social media',
-                description: 'Cape influencer posted "bat signal" content without any mention of actual chiroptera.',
+                description: 'Major entertainment account posted "bat signal" imagery. No educational content about real bats or their conservation needs.',
               },
               {
                 date: '2024-01-05',
-                location: 'Convention center',
-                description: 'Spotted: cape-based merchandise using bat imagery. No proceeds going to bat conservation.',
+                location: 'Comic convention',
+                description: 'Merchandise featuring bat imagery on sale. Vendors confirmed no portion of proceeds supports bat conservation.',
               },
             ].map((sighting, i) => (
               <div
@@ -161,8 +163,8 @@ export default function PoserWatchPage() {
 
         {/* Info */}
         <div className="mt-8 text-center text-gray-500 text-sm">
-          <p>All reports are reviewed by community moderators.</p>
-          <p className="mt-2">Remember: Real bats do the work. Capes are just theater.</p>
+          <p>All reports are reviewed by our volunteer team.</p>
+          <p className="mt-2">Accurate bat portrayals in media help conservation efforts. Fictional uses of bat imagery matter too.</p>
         </div>
       </div>
     </div>
