@@ -95,7 +95,7 @@ export class BatCaveAudioEngine {
 
     for (let i = 0; i < 3; i++) {
       const osc = this.audioContext.createOscillator()
-      osc.type = 'sine'
+      osc.type = 'triangle' // Triangle wave for richer harmonics
       osc.frequency.value = baseFreq
 
       // Individual gain for mixing
