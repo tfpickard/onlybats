@@ -6,38 +6,38 @@ import { useSearchParams } from 'next/navigation'
 const DONATION_TIERS = [
   {
     id: 'single-pellet',
-    name: 'Foundational Supporter',
+    name: 'Friend of Bats',
     amount: 500, // $5
-    description: 'Essential baseline contribution to our nutrient-cycling economic model',
+    description: 'Every bit helps support our bat conservation work',
     benefits: [
-      'Verified donor recognition in organizational records',
-      'Digital acknowledgment via automated gratitude protocol',
-      'Contribution to sustainable bat research funding infrastructure',
+      'Our sincere thanks',
+      'Know you're helping protect bats',
+      'Digital thank-you note',
     ],
   },
   {
     id: 'respectable-pile',
-    name: 'Research Sustainer',
+    name: 'Bat Champion',
     amount: 2000, // $20
-    description: 'Substantial investment in evidence-based conservation operations',
+    description: 'Make a meaningful impact on bat conservation',
     benefits: [
-      'All Foundational Supporter benefits',
-      'Public acknowledgment in community communications archive',
-      'Official "Conservation Contributor" designation',
-      'Priority notification of research developments and organizational updates',
+      'All Friend of Bats benefits',
+      'Name listed on our supporters page',
+      'Bat conservation updates',
+      'Early access to new educational content',
     ],
   },
   {
     id: 'cathedral-of-guano',
-    name: 'Legacy Patron',
+    name: 'Bat Guardian',
     amount: 10000, // $100
-    description: 'Transformative philanthropic commitment to chiropteran science',
+    description: 'Join our most dedicated supporters',
     benefits: [
-      'All Research Sustainer benefits',
-      'Permanent recognition in OnlyBats donor registry',
-      'Lifetime "Research Architect" status with professional credential',
-      'Direct appreciation correspondence from senior research staff',
-      'Exclusive early access to peer-reviewed findings and data releases',
+      'All Bat Champion benefits',
+      'Permanent recognition in our annual report',
+      'Special supporter badge',
+      'Personal thank-you from our team',
+      'First look at research findings',
     ],
   },
 ]
@@ -121,11 +121,11 @@ function DonateGuanoContent() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-bat-primary bat-glow mb-4">
-            Support OnlyBats Research
+            Support Bat Conservation
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Your contribution sustains critical bat conservation infrastructure and scientific research operations.
-            100% donor-funded. Independent from corporate wildlife entertainment enterprises.
+            Your donation helps us protect bats through research, education, and community outreach.
+            We're 100% donor-funded and independent.
           </p>
         </div>
 
@@ -242,36 +242,34 @@ function DonateGuanoContent() {
         {/* Info boxes */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-cave-dark border border-cave-light rounded-lg p-6">
-            <h3 className="text-bat-secondary font-bold mb-3">Fund Allocation</h3>
+            <h3 className="text-bat-secondary font-bold mb-3">Where Your Money Goes</h3>
             <ul className="space-y-2 text-sm text-gray-400">
-              <li>• Digital infrastructure maintenance and hosting services</li>
-              <li>• Volunteer moderator coordination and support</li>
-              <li>• Scientific fact-checking and peer review processes</li>
-              <li>• Educational resource development and distribution</li>
-              <li>• Misinformation monitoring and public awareness initiatives</li>
+              <li>• Website hosting and maintenance</li>
+              <li>• Volunteer coordination</li>
+              <li>• Educational content creation</li>
+              <li>• Research and fact-checking</li>
+              <li>• Media monitoring program</li>
             </ul>
           </div>
 
           <div className="bg-cave-darkest border-2 border-bat-primary rounded-lg p-6">
-            <h3 className="text-bat-primary font-bold mb-3">Our Funding Philosophy</h3>
+            <h3 className="text-bat-primary font-bold mb-3">How We Work</h3>
             <p className="text-sm text-gray-400 mb-3">
-              OnlyBats operates on a sustainable, nutrient-cycling economic model inspired by
-              natural bat ecosystems. Your contributions circulate through our organization
-              to support evidence-based conservation work that mirrors the efficient,
-              renewable resource management that chiropteran colonies have refined over
-              millions of years of evolutionary optimization.
+              We run on donations from people who care about bats. Your support helps us maintain
+              this community, create educational resources, and track how bats are portrayed in media.
+              Everything we do is focused on bat conservation.
             </p>
             <p className="text-xs text-gray-500">
-              Grassroots funding model. No corporate entertainment partnerships.
+              Community-funded and independent.
             </p>
           </div>
         </div>
 
         {/* Disclaimer */}
         <div className="mt-8 text-center text-gray-500 text-xs">
-          <p>All transactions processed securely through Stripe payment infrastructure.</p>
-          <p className="mt-2">OnlyBats maintains strict financial independence from all commercial wildlife media enterprises.</p>
-          <p className="mt-2">100% of donations fund bat conservation and research (excluding standard payment processing fees).</p>
+          <p>Secure payment processing by Stripe.</p>
+          <p className="mt-2">We're independent—no corporate sponsors or entertainment industry partnerships.</p>
+          <p className="mt-2">100% of your donation goes to bat conservation (minus payment processing fees).</p>
         </div>
       </div>
     </div>

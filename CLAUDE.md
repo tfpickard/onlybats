@@ -7,13 +7,14 @@ OnlyBats.org is a Next.js 14 website presenting itself as a serious bat conserva
 ## Development Guidelines
 
 ### Tone & Voice
-- **Overly serious and academic** - presents as a legitimate 501(c)(3) nonprofit
-- **Unintentionally funny** - takes absurd concepts (monitoring Batman, "guano economy") with complete earnestness
-- **No self-awareness** - never acknowledges the humor; genuinely believes monitoring costume-based entertainment is important conservation work
-- **Rigorous and evidence-based language** - "peer-reviewed," "scientifically validated," "evidence-based methodology"
-- **Implicitly validates questionable priorities** - treats Batman monitoring as seriously as actual bat research
-- Example phrases: "chiropteran conservation," "misinformation monitoring initiative," "nutrient-cycling economic model," "costume-based entertainment narratives"
-- **Never playful or winking** - this is serious bat science, not a joke (according to the site)
+- **Sincere and accessible** - sounds like a real 501(c)(3) nonprofit, not an obvious parody
+- **Clear and straightforward** - avoid jargon, use simple language that real people use
+- **Unintentionally funny** - the humor comes from WHAT they're doing (monitoring Batman), not HOW they say it
+- **No self-awareness** - genuinely believes media monitoring is part of their conservation mission
+- **Think NPR, not academic journal** - professional but relatable, like Nina Totenberg reporting on bats
+- Avoid: "chiropteran," "evidence-based methodology," "peer-reviewed" (unless actually warranted)
+- Use: "bat," "research," "science," "conservation" - normal nonprofit language
+- **Let readers choose to support them** - engage, don't preach or coerce
 
 ### Code Patterns
 

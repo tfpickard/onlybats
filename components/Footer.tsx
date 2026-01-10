@@ -9,10 +9,10 @@ export default function Footer() {
           <div>
             <h3 className="text-bat-primary font-bold mb-3">About OnlyBats</h3>
             <p className="text-gray-400 text-sm leading-relaxed">
-              A 501(c)(3) nonprofit organization dedicated to chiropteran research, conservation, and public education.
+              A 501(c)(3) nonprofit dedicated to bat research, conservation, and education.
             </p>
             <p className="text-gray-400 text-sm mt-2">
-              Advancing bat science through rigorous methodology and community engagement.
+              Supporting bats through science and community action.
             </p>
           </div>
 
@@ -22,17 +22,17 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <Link href="/poser-watch" className="text-gray-400 hover:text-bat-glow">
-                  Misinformation Monitoring Initiative →
+                  Media Monitoring →
                 </Link>
               </li>
               <li>
                 <Link href="/donate-guano" className="text-gray-400 hover:text-bat-glow">
-                  Support Our Mission →
+                  Support Our Work →
                 </Link>
               </li>
               <li>
                 <Link href="/roost-board" className="text-gray-400 hover:text-bat-glow">
-                  Research Community Forum →
+                  Community Forum →
                 </Link>
               </li>
             </ul>
@@ -40,19 +40,19 @@ export default function Footer() {
 
           {/* Status */}
           <div>
-            <h3 className="text-bat-primary font-bold mb-3">Organizational Status</h3>
+            <h3 className="text-bat-primary font-bold mb-3">Status</h3>
             <div className="space-y-2 text-sm">
               <div className="flex items-center space-x-2">
                 <span className="text-green-400">●</span>
-                <span className="text-gray-400">Donor-supported operations</span>
+                <span className="text-gray-400">Community-supported</span>
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-green-400">●</span>
-                <span className="text-gray-400">Open-access research</span>
+                <span className="text-gray-400">Open to all</span>
               </div>
               <div className="flex items-center space-x-2">
                 <span className="text-yellow-400">●</span>
-                <span className="text-gray-400">Anti-Misinformation Program: Active</span>
+                <span className="text-gray-400">Media Monitoring: Active</span>
               </div>
             </div>
           </div>
@@ -62,12 +62,12 @@ export default function Footer() {
         <div className="mt-8 pt-6 border-t border-cave-light">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <p className="text-gray-500 text-xs">
-              © {new Date().getFullYear()} OnlyBats.org — A registered 501(c)(3) nonprofit organization
+              © {new Date().getFullYear()} OnlyBats.org — A 501(c)(3) nonprofit
             </p>
             <div className="flex space-x-4 text-xs text-gray-500">
-              <span>Evidence-based conservation</span>
+              <span>Science-based conservation</span>
               <span>•</span>
-              <span>Chiroptera-centered mission</span>
+              <span>For the bats</span>
             </div>
           </div>
         </div>

@@ -8,11 +8,11 @@ export default function Home() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold text-bat-primary bat-glow mb-4">
-            Live Chiroptera Behavioral Simulation
+            Live Bat Colony Simulation
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            A research-grade cellular automata model demonstrating authentic bat colony dynamics.
-            This critical conservation tool advances our understanding of chiropteran social structures.
+            Watch a simulated bat colony navigate their cave using echolocation.
+            This model helps us understand how bats coordinate and communicate.
           </p>
         </div>
 
@@ -28,33 +28,33 @@ export default function Home() {
 
         {/* Legend */}
         <div className="mt-8 bg-cave-dark border border-cave-light rounded-lg p-6">
-          <h3 className="text-bat-primary font-bold mb-4">Visualization Field Parameters</h3>
+          <h3 className="text-bat-primary font-bold mb-4">What You're Seeing</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div>
               <div className="flex items-center space-x-2 mb-2">
                 <div className="w-4 h-4 bg-bat-primary rounded-full"></div>
-                <span className="text-gray-300 font-medium">Echolocation Field Density</span>
+                <span className="text-gray-300 font-medium">Echolocation Signals</span>
               </div>
               <p className="text-gray-500 text-xs">
-                Purple indicators represent cooperative ultrasonic emission patterns essential for colony coordination. Scientifically validated.
+                Purple dots show where bats are using sonar to navigate. They work together to avoid collisions.
               </p>
             </div>
             <div>
               <div className="flex items-center space-x-2 mb-2">
                 <div className="w-4 h-4 bg-guano-light rounded-full"></div>
-                <span className="text-gray-300 font-medium">Guano Deposition Tracking</span>
+                <span className="text-gray-300 font-medium">Movement Trails</span>
               </div>
               <p className="text-gray-500 text-xs">
-                Brownish markers indicate biologically significant fecal matter distribution patterns critical to ecosystem nutrient cycles.
+                Brownish areas mark where bats have traveled. In real caves, this would be guano buildup.
               </p>
             </div>
             <div>
               <div className="flex items-center space-x-2 mb-2">
                 <div className="w-4 h-4 bg-red-500 rounded-full"></div>
-                <span className="text-gray-300 font-medium">External Interference Zones</span>
+                <span className="text-gray-300 font-medium">Disturbances</span>
               </div>
               <p className="text-gray-500 text-xs">
-                Red indicators mark disruptions to natural bat behavior patterns. User interaction permitted for educational research purposes.
+                Red ripples show disruptions to the colony. Click anywhere to create one and watch how bats respond.
               </p>
             </div>
           </div>
@@ -63,13 +63,11 @@ export default function Home() {
         {/* About */}
         <div className="mt-8 text-center text-gray-500 text-sm max-w-2xl mx-auto">
           <p>
-            This perpetual simulation operates using peer-reviewed cellular automata algorithms to model
-            authentic chiropteran behavioral patterns. The system demonstrates emergent colony intelligence
-            through mathematically rigorous echolocation protocols, wall-navigation heuristics, and
-            disturbance-response mechanisms verified against field observations.
+            This simulation runs continuously, showing how bat colonies behave in their natural habitat.
+            The bats use echolocation to navigate, avoid walls, and respond to disturbances—just like real bats do.
           </p>
           <p className="mt-4 text-gray-600 font-medium">
-            Dedicated exclusively to the advancement of bat science and conservation.
+            Supporting bat conservation through education and research.
           </p>
         </div>
       </div>
