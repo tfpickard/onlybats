@@ -24,13 +24,14 @@ export class BatCaveAudioEngine {
   private chaosGain: GainNode | null = null
 
   // Oscillators for continuous sounds
-  private ambientOscillator: OscillatorNode | null = null
-  private ambientLFO: OscillatorNode | null = null
+  private ambientOscillators: OscillatorNode[] = [] // 3 drones with chaotic detuning
+  private lorenzState: { x: number; y: number; z: number } = { x: 1, y: 1, z: 1 }
   private chaosOscillators: OscillatorNode[] = []
 
   // Scheduling
   private lastSonarTime = 0
   private lastFlutterTime = 0
+  private lastLorenzUpdate = 0
 
   private config: AudioConfig = {
     enabled: false,
@@ -84,29 +85,29 @@ export class BatCaveAudioEngine {
   }
 
   /**
-   * Start the ambient background drone
+   * Start the ambient background drone with 3 chaotically detuning oscillators
    */
   private startAmbientDrone(): void {
     if (!this.audioContext || !this.ambientGain) return
 
-    // Low frequency drone
-    this.ambientOscillator = this.audioContext.createOscillator()
-    this.ambientOscillator.type = 'sine'
-    this.ambientOscillator.frequency.value = 55 // A1 - deep cave resonance
+    // Create 3 oscillators at harmonic intervals
+    const baseFreqs = [55, 82.5, 110] // A1, E2, A2 (5th and octave)
 
-    // LFO for subtle modulation
-    this.ambientLFO = this.audioContext.createOscillator()
-    this.ambientLFO.type = 'sine'
-    this.ambientLFO.frequency.value = 0.2 // Slow modulation
+    for (let i = 0; i < 3; i++) {
+      const osc = this.audioContext.createOscillator()
+      osc.type = 'sine'
+      osc.frequency.value = baseFreqs[i]
 
-    const lfoGain = this.audioContext.createGain()
-    lfoGain.gain.value = 2 // Subtle pitch variation
-    this.ambientLFO.connect(lfoGain)
-    lfoGain.connect(this.ambientOscillator.frequency)
+      // Individual gain for mixing
+      const gain = this.audioContext.createGain()
+      gain.gain.value = 0.3 // Equal mix
 
-    this.ambientOscillator.connect(this.ambientGain)
-    this.ambientOscillator.start()
-    this.ambientLFO.start()
+      osc.connect(gain)
+      gain.connect(this.ambientGain)
+      osc.start()
+
+      this.ambientOscillators.push(osc)
+    }
   }
 
   /**
@@ -117,8 +118,14 @@ export class BatCaveAudioEngine {
 
     const now = this.audioContext.currentTime
 
-    // Update ambient drone based on bat count and energy
-    this.updateAmbientDrone(metrics)
+    // Update Lorenz attractor for chaotic detuning
+    if (now - this.lastLorenzUpdate > 0.05) {
+      this.updateLorenzAttractor()
+      this.lastLorenzUpdate = now
+    }
+
+    // Update ambient drone with chaotic detuning
+    this.updateAmbientDrone(metrics, now)
 
     // Trigger sonar pings based on bat density
     if (now - this.lastSonarTime > this.getSonarInterval(metrics)) {
@@ -142,27 +149,56 @@ export class BatCaveAudioEngine {
   }
 
   /**
-   * Update the ambient drone frequency and filtering
+   * Update Lorenz attractor state for chaotic detuning
    */
-  private updateAmbientDrone(metrics: SimulationMetrics): void {
-    if (!this.audioContext || !this.ambientOscillator || !this.ambientGain) return
+  private updateLorenzAttractor(): void {
+    const sigma = 10
+    const rho = 28
+    const beta = 8 / 3
+    const dt = 0.01
 
-    // Modulate frequency based on bat count (more bats = higher frequency)
-    const baseFreq = 55
-    const freqRange = 30
-    const targetFreq = baseFreq + (metrics.batCount / 1000) * freqRange
+    const { x, y, z } = this.lorenzState
 
-    // Smooth transition
-    this.ambientOscillator.frequency.exponentialRampToValueAtTime(
-      targetFreq,
-      this.audioContext.currentTime + 0.5
-    )
+    const dx = sigma * (y - x) * dt
+    const dy = (x * (rho - z) - y) * dt
+    const dz = (x * y - beta * z) * dt
 
-    // Modulate volume based on average energy
+    this.lorenzState.x += dx
+    this.lorenzState.y += dy
+    this.lorenzState.z += dz
+  }
+
+  /**
+   * Update the ambient drone with chaotic detuning from Lorenz attractor
+   */
+  private updateAmbientDrone(metrics: SimulationMetrics, now: number): void {
+    if (!this.audioContext || this.ambientOscillators.length !== 3 || !this.ambientGain) return
+
+    // Base frequencies
+    const baseFreqs = [55, 82.5, 110]
+
+    // Map Lorenz coordinates to detuning (-2 to +2 Hz)
+    // Normalize Lorenz values (typical range is roughly -20 to +20)
+    const detuning = [
+      (this.lorenzState.x / 20) * 2, // ±2 Hz for first oscillator
+      (this.lorenzState.y / 20) * 2, // ±2 Hz for second oscillator
+      (this.lorenzState.z / 30) * 2, // ±2 Hz for third oscillator (z has different range)
+    ]
+
+    // Apply chaotic detuning to each oscillator
+    for (let i = 0; i < 3; i++) {
+      const targetFreq = baseFreqs[i] + detuning[i] + (metrics.batCount / 1000) * 10
+      this.ambientOscillators[i].frequency.exponentialRampToValueAtTime(
+        Math.max(20, targetFreq), // Prevent going below 20Hz
+        now + 0.1 // Smooth but responsive
+      )
+    }
+
+    // Modulate overall volume based on average energy
     const energyVolume = 0.3 + (metrics.averageEnergy / 7) * 0.3
     this.ambientGain.gain.exponentialRampToValueAtTime(
       energyVolume * this.config.ambientVolume,
-      this.audioContext.currentTime + 0.5
+      now + 0.5
     )
   }
 
@@ -394,15 +430,11 @@ export class BatCaveAudioEngine {
   destroy(): void {
     this.config.enabled = false
 
-    if (this.ambientOscillator) {
-      this.ambientOscillator.stop()
-      this.ambientOscillator = null
-    }
-
-    if (this.ambientLFO) {
-      this.ambientLFO.stop()
-      this.ambientLFO = null
-    }
+    this.ambientOscillators.forEach((osc) => {
+      osc.stop()
+      osc.disconnect()
+    })
+    this.ambientOscillators = []
 
     this.chaosOscillators.forEach((osc) => {
       osc.stop()

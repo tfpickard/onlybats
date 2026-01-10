@@ -12,6 +12,7 @@ export interface BatCell {
   heading: Direction
   energy: number // 0-7
   velocity: number // 0-1, tracks recent movement success
+  leaderGravity: number // 0-1, how much this bat attracts others
 }
 
 export interface SimulationMetrics {
@@ -47,6 +48,9 @@ export interface SimulationConfig {
   seed: number
   preset?: 'random' | 'maternity-spiral' | 'guano-vortex' | 'tourist-panic' | 'cape-shadow'
   behaviorMode?: BehaviorMode
+  leaderGravityMean?: number // 0-1, mean of Gaussian distribution
+  leaderGravityVariance?: number // 0-1, variance of Gaussian distribution
+  leaderInfluence?: number // 0-1, strength of leader attraction
 }
 
 // Direction vectors (8-way)
@@ -77,19 +81,41 @@ class SeededRandom {
   nextInt(max: number): number {
     return Math.floor(this.next() * max)
   }
+
+  // Box-Muller transform for Gaussian distribution
+  nextGaussian(mean: number = 0, variance: number = 1): number {
+    const u1 = this.next()
+    const u2 = this.next()
+    const z0 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)
+    return z0 * Math.sqrt(variance) + mean
+  }
 }
 
 export function createSimulation(config: SimulationConfig): SimulationState {
-  const { width, height, density, seed, preset, behaviorMode = 'calm' } = config
+  const {
+    width,
+    height,
+    density,
+    seed,
+    preset,
+    behaviorMode = 'calm',
+    leaderGravityMean = 0.3,
+    leaderGravityVariance = 0.15,
+  } = config
   const size = width * height
   const rng = new SeededRandom(seed)
 
-  const grid: BatCell[] = new Array(size).fill(null).map(() => ({
-    occupied: false,
-    heading: 0 as Direction,
-    energy: 5,
-    velocity: 0.5,
-  }))
+  // Generate leader gravity values with Gaussian distribution
+  const grid: BatCell[] = new Array(size).fill(null).map(() => {
+    const leaderGravity = Math.max(0, Math.min(1, rng.nextGaussian(leaderGravityMean, leaderGravityVariance)))
+    return {
+      occupied: false,
+      heading: 0 as Direction,
+      energy: 5,
+      velocity: 0.5,
+      leaderGravity,
+    }
+  })
 
   const sonarField = new Float32Array(size)
   const guanoField = new Float32Array(size)
@@ -412,18 +438,21 @@ export function updateSimulation(
   // Phase 4: Enhanced Steering and Movement with Flocking Behavior
   const newGrid: BatCell[] = grid.map((cell) => ({ ...cell }))
 
-  // First pass: Calculate neighborhood information for flocking
+  // First pass: Calculate neighborhood information for flocking with leader tracking
   const neighborhoodRadius = 5
   const flockingInfo: Array<{
     nearbyCount: number
     avgHeading: number
     centerX: number
     centerY: number
+    leaderX: number // Position of strongest nearby leader
+    leaderY: number
+    leaderGravity: number // Gravity of strongest nearby leader
   }> = []
 
   for (let i = 0; i < grid.length; i++) {
     if (!grid[i].occupied) {
-      flockingInfo.push({ nearbyCount: 0, avgHeading: 0, centerX: 0, centerY: 0 })
+      flockingInfo.push({ nearbyCount: 0, avgHeading: 0, centerX: 0, centerY: 0, leaderX: 0, leaderY: 0, leaderGravity: 0 })
       continue
     }
 
@@ -434,6 +463,9 @@ export function updateSimulation(
     let headingSum = 0
     let centerX = 0
     let centerY = 0
+    let strongestLeaderX = x
+    let strongestLeaderY = y
+    let strongestLeaderGravity = grid[i].leaderGravity
 
     // Check neighborhood
     for (let dy = -neighborhoodRadius; dy <= neighborhoodRadius; dy++) {
@@ -449,6 +481,13 @@ export function updateSimulation(
               headingSum += grid[nidx].heading
               centerX += nx
               centerY += ny
+
+              // Track strongest leader
+              if (grid[nidx].leaderGravity > strongestLeaderGravity) {
+                strongestLeaderGravity = grid[nidx].leaderGravity
+                strongestLeaderX = nx
+                strongestLeaderY = ny
+              }
             }
           }
         }
@@ -461,9 +500,20 @@ export function updateSimulation(
         avgHeading: headingSum / nearbyCount,
         centerX: centerX / nearbyCount,
         centerY: centerY / nearbyCount,
+        leaderX: strongestLeaderX,
+        leaderY: strongestLeaderY,
+        leaderGravity: strongestLeaderGravity,
       })
     } else {
-      flockingInfo.push({ nearbyCount: 0, avgHeading: grid[i].heading, centerX: x, centerY: y })
+      flockingInfo.push({
+        nearbyCount: 0,
+        avgHeading: grid[i].heading,
+        centerX: x,
+        centerY: y,
+        leaderX: x,
+        leaderY: y,
+        leaderGravity: grid[i].leaderGravity,
+      })
     }
   }
 
@@ -556,7 +606,20 @@ export function updateSimulation(
           score += (10 - distToEdge) * 0.5
         }
 
-        // 7. Chaos mode: Add strange attractor influence
+        // 7. Leader Following: Move toward strongest nearby leader
+        const leaderInfluence = (config.leaderInfluence ?? 0.5) * 10
+        if (flock.leaderGravity > cell.leaderGravity && flock.nearbyCount > 0) {
+          const toLeaderX = flock.leaderX - x
+          const toLeaderY = flock.leaderY - y
+          const leaderAngle = Math.atan2(toLeaderY, toLeaderX)
+          const targetHeading = Math.round(((leaderAngle + Math.PI * 2) / (Math.PI * 2)) * 8) % 8
+          const leaderDiff = Math.abs(newHeading - targetHeading)
+          const leaderBonus = Math.max(0, 8 - leaderDiff)
+          const gravityDiff = flock.leaderGravity - cell.leaderGravity
+          score += leaderBonus * gravityDiff * leaderInfluence
+        }
+
+        // 8. Chaos mode: Add strange attractor influence
         if (state.behaviorMode === 'chaos') {
           const chaosInfluence = getLorenzAttractor(x / width, y / height, state.tick)
           score += chaosInfluence * 10
@@ -774,21 +837,27 @@ function calculateMetrics(state: SimulationState): void {
 
   // Determine behavior mode based on state
   let behaviorMode: BehaviorMode = state.behaviorMode
+  const avgVelocity = batCount > 0 ? totalVelocity / batCount : 0
 
-  // Auto-transition behavior modes based on conditions
-  if (normalizedDisturbance > 0.3) {
+  // Auto-transition behavior modes based on conditions (with hysteresis to prevent thrashing)
+  // Priority order: panic > chaos > roosting > foraging > calm
+  if (normalizedDisturbance > 0.4) {
+    // Strong disturbance triggers panic
     behaviorMode = 'panic'
-  } else if (chaosLevel > 0.7) {
+  } else if (chaosLevel > 0.75) {
+    // Very high chaos level
     behaviorMode = 'chaos'
-  } else if (batCount > 0 && totalVelocity / batCount < 0.3) {
+  } else if (avgVelocity < 0.25 || (clusterCount > 0 && largestClusterSize / batCount > 0.7)) {
+    // Very low velocity or very tight clustering
     behaviorMode = 'roosting'
-  } else if (clusterCount > 0 && largestClusterSize / batCount > 0.6) {
-    behaviorMode = 'roosting'
-  } else if (totalVelocity / Math.max(batCount, 1) > 0.6) {
+  } else if (avgVelocity > 0.75 && clusterCount > 3) {
+    // High velocity with multiple dispersed clusters
     behaviorMode = 'foraging'
-  } else {
+  } else if (normalizedDisturbance < 0.1 && chaosLevel < 0.3 && avgVelocity >= 0.25 && avgVelocity <= 0.75) {
+    // Moderate conditions
     behaviorMode = 'calm'
   }
+  // Otherwise, maintain current mode (hysteresis)
 
   // Update metrics
   state.metrics = {

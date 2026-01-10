@@ -27,6 +27,9 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
   const [behaviorMode, setBehaviorMode] = useState<BehaviorMode>('calm')
   const [audioEnabled, setAudioEnabled] = useState(false)
   const [masterVolume, setMasterVolume] = useState(0.3)
+  const [leaderGravityMean, setLeaderGravityMean] = useState(0.3)
+  const [leaderGravityVariance, setLeaderGravityVariance] = useState(0.15)
+  const [leaderInfluence, setLeaderInfluence] = useState(0.5)
 
   const simulationRef = useRef<SimulationState | null>(null)
   const audioEngineRef = useRef<BatCaveAudioEngine | null>(null)
@@ -62,11 +65,14 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
       seed,
       preset,
       behaviorMode,
+      leaderGravityMean,
+      leaderGravityVariance,
+      leaderInfluence,
     }
 
     simulationRef.current = createSimulation(config)
     lastTickRef.current = 0 // Reset timing when simulation is recreated
-  }, [seed, preset, behaviorMode, density, sonarSensitivity, wallRoughness])
+  }, [seed, preset, behaviorMode, density, sonarSensitivity, wallRoughness, leaderGravityMean, leaderGravityVariance, leaderInfluence])
 
   // Animation loop
   useEffect(() => {
@@ -100,6 +106,9 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
             sonarSensitivity,
             wallRoughness,
             seed: simulationRef.current.seed,
+            leaderGravityMean,
+            leaderGravityVariance,
+            leaderInfluence,
           }
           updateSimulation(simulationRef.current, config)
           lastTickRef.current = currentTime
@@ -251,6 +260,9 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
       seed,
       preset,
       behaviorMode,
+      leaderGravityMean,
+      leaderGravityVariance,
+      leaderInfluence,
     }
 
     simulationRef.current = createSimulation(config)
@@ -419,6 +431,63 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
               className="w-full"
               disabled={!audioEnabled}
             />
+          </div>
+        </div>
+
+        {/* Leader Gravity Controls */}
+        <div className="border-t border-cave-light pt-4">
+          <h3 className="text-bat-secondary text-sm font-medium mb-3">Leader Gravity (Gaussian Distribution)</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Leader Gravity Mean */}
+            <div>
+              <label className="block text-bat-secondary text-sm mb-2">
+                Mean: {leaderGravityMean.toFixed(2)}
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={leaderGravityMean}
+                onChange={(e) => setLeaderGravityMean(parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-500 mt-1">Center of leader distribution</p>
+            </div>
+
+            {/* Leader Gravity Variance */}
+            <div>
+              <label className="block text-bat-secondary text-sm mb-2">
+                Variance: {leaderGravityVariance.toFixed(2)}
+              </label>
+              <input
+                type="range"
+                min="0.05"
+                max="0.4"
+                step="0.05"
+                value={leaderGravityVariance}
+                onChange={(e) => setLeaderGravityVariance(parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-500 mt-1">Spread of leadership values</p>
+            </div>
+
+            {/* Leader Influence */}
+            <div>
+              <label className="block text-bat-secondary text-sm mb-2">
+                Influence: {(leaderInfluence * 100).toFixed(0)}%
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={leaderInfluence}
+                onChange={(e) => setLeaderInfluence(parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-500 mt-1">Strength of leader attraction</p>
+            </div>
           </div>
         </div>
 
