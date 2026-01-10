@@ -47,6 +47,7 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
     }
 
     simulationRef.current = createSimulation(config)
+    lastTickRef.current = 0 // Reset timing when simulation is recreated
   }, [seed, preset]) // Reinitialize on seed/preset change
 
   // Animation loop
@@ -100,7 +101,7 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
         cancelAnimationFrame(rafRef.current)
       }
     }
-  }, [isPaused, speed, density, sonarSensitivity, wallRoughness])
+  }, [isPaused, speed, density, sonarSensitivity, wallRoughness, preset, seed])
 
   const render = (ctx: CanvasRenderingContext2D, state: SimulationState) => {
     const { width, height, grid, sonarField, guanoField, disturbanceField } = state
