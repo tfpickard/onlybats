@@ -19,7 +19,7 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isPaused, setIsPaused] = useState(false)
   const [speed, setSpeed] = useState(1)
-  const [density, setDensity] = useState(0.08) // Reduced for better performance
+  const [density, setDensity] = useState(0.008) // Reduced by order of magnitude
   const [sonarSensitivity, setSonarSensitivity] = useState(0.5)
   const [wallRoughness, setWallRoughness] = useState(0.5)
   const [preset, setPreset] = useState<'random' | 'maternity-spiral' | 'guano-vortex' | 'tourist-panic' | 'cape-shadow'>('random')
@@ -371,13 +371,13 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
           {/* Density */}
           <div>
             <label className="block text-bat-secondary text-sm mb-2">
-              Density: {(density * 100).toFixed(0)}%
+              Density: {(density * 100).toFixed(1)}%
             </label>
             <input
               type="range"
-              min="0.05"
+              min="0.001"
               max="0.3"
-              step="0.01"
+              step="0.001"
               value={density}
               onChange={(e) => setDensity(parseFloat(e.target.value))}
               className="w-full"

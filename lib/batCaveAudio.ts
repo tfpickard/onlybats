@@ -90,13 +90,13 @@ export class BatCaveAudioEngine {
   private startAmbientDrone(): void {
     if (!this.audioContext || !this.ambientGain) return
 
-    // Create 3 oscillators at harmonic intervals
-    const baseFreqs = [55, 82.5, 110] // A1, E2, A2 (5th and octave)
+    // Create 3 oscillators all starting at the same frequency
+    const baseFreq = 90 // All start at 90 Hz
 
     for (let i = 0; i < 3; i++) {
       const osc = this.audioContext.createOscillator()
       osc.type = 'sine'
-      osc.frequency.value = baseFreqs[i]
+      osc.frequency.value = baseFreq
 
       // Individual gain for mixing
       const gain = this.audioContext.createGain()
@@ -174,8 +174,8 @@ export class BatCaveAudioEngine {
   private updateAmbientDrone(metrics: SimulationMetrics, now: number): void {
     if (!this.audioContext || this.ambientOscillators.length !== 3 || !this.ambientGain) return
 
-    // Base frequencies
-    const baseFreqs = [55, 82.5, 110]
+    // Base frequency (all oscillators start at 90 Hz)
+    const baseFreq = 90
 
     // Map Lorenz coordinates to detuning (-2 to +2 Hz)
     // Normalize Lorenz values (typical range is roughly -20 to +20)
@@ -187,7 +187,7 @@ export class BatCaveAudioEngine {
 
     // Apply chaotic detuning to each oscillator
     for (let i = 0; i < 3; i++) {
-      const targetFreq = baseFreqs[i] + detuning[i] + (metrics.batCount / 1000) * 10
+      const targetFreq = baseFreq + detuning[i] + (metrics.batCount / 1000) * 10
       this.ambientOscillators[i].frequency.exponentialRampToValueAtTime(
         Math.max(20, targetFreq), // Prevent going below 20Hz
         now + 0.1 // Smooth but responsive
