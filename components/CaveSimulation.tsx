@@ -5,12 +5,30 @@ import {
   createSimulation,
   updateSimulation,
   addDisturbance,
+  type BatCell,
   type SimulationState,
   type SimulationConfig,
 } from '@/lib/batCaveSimulation'
 
 interface CaveSimulationProps {
   onViewerCountUpdate?: (count: number) => void
+}
+
+type ListeningMode = 'single' | 'colony' | 'cave'
+
+interface SonificationNodes {
+  masterGain: GainNode
+  singleOsc: OscillatorNode
+  singleGain: GainNode
+  chorusOscillators: OscillatorNode[]
+  chorusGain: GainNode
+  lfo: OscillatorNode
+  lfoGain: GainNode
+  caveNoise: AudioBufferSourceNode
+  caveFilter: BiquadFilterNode
+  caveDelay: DelayNode
+  caveFeedback: GainNode
+  caveGain: GainNode
 }
 
 export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationProps) {
@@ -22,10 +40,15 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
   const [wallRoughness, setWallRoughness] = useState(0.5)
   const [preset, setPreset] = useState<'random' | 'maternity-spiral' | 'guano-vortex' | 'tourist-panic' | 'cape-shadow'>('random')
   const [seed, setSeed] = useState(42)
+  const [audioEnabled, setAudioEnabled] = useState(false)
+  const [audioMode, setAudioMode] = useState<ListeningMode>('colony')
+  const [audioVolume, setAudioVolume] = useState(0.35)
 
   const simulationRef = useRef<SimulationState | null>(null)
   const rafRef = useRef<number>(0)
   const lastTickRef = useRef<number>(0)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const audioNodesRef = useRef<SonificationNodes | null>(null)
 
   // Initialize simulation
   useEffect(() => {
@@ -49,6 +72,117 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
     simulationRef.current = createSimulation(config)
     lastTickRef.current = 0 // Reset timing when simulation is recreated
   }, [seed, preset]) // Reinitialize on seed/preset change
+
+  useEffect(() => {
+    if (!audioEnabled) {
+      if (audioContextRef.current) {
+        audioContextRef.current.close()
+        audioContextRef.current = null
+        audioNodesRef.current = null
+      }
+      return
+    }
+
+    const audioContext = new AudioContext()
+    const masterGain = audioContext.createGain()
+    masterGain.gain.value = audioVolume
+    masterGain.connect(audioContext.destination)
+
+    const singleOsc = audioContext.createOscillator()
+    singleOsc.type = 'sine'
+    const singleGain = audioContext.createGain()
+    singleGain.gain.value = 0
+    singleOsc.connect(singleGain)
+    singleGain.connect(masterGain)
+
+    const chorusOscillators = Array.from({ length: 4 }, () => {
+      const osc = audioContext.createOscillator()
+      osc.type = 'triangle'
+      return osc
+    })
+    const chorusGain = audioContext.createGain()
+    chorusGain.gain.value = 0
+    chorusOscillators.forEach((osc) => {
+      osc.connect(chorusGain)
+    })
+    chorusGain.connect(masterGain)
+
+    const lfo = audioContext.createOscillator()
+    lfo.type = 'sine'
+    lfo.frequency.value = 0.2
+    const lfoGain = audioContext.createGain()
+    lfoGain.gain.value = 12
+    lfo.connect(lfoGain)
+    chorusOscillators.forEach((osc) => lfoGain.connect(osc.detune))
+
+    const noiseBuffer = audioContext.createBuffer(1, audioContext.sampleRate * 2, audioContext.sampleRate)
+    const noiseData = noiseBuffer.getChannelData(0)
+    for (let i = 0; i < noiseData.length; i++) {
+      noiseData[i] = (Math.random() * 2 - 1) * 0.5
+    }
+
+    const caveNoise = audioContext.createBufferSource()
+    caveNoise.buffer = noiseBuffer
+    caveNoise.loop = true
+    const caveFilter = audioContext.createBiquadFilter()
+    caveFilter.type = 'bandpass'
+    caveFilter.frequency.value = 260
+    caveFilter.Q.value = 0.8
+
+    const caveDelay = audioContext.createDelay(1.0)
+    caveDelay.delayTime.value = 0.18
+    const caveFeedback = audioContext.createGain()
+    caveFeedback.gain.value = 0.45
+    caveDelay.connect(caveFeedback)
+    caveFeedback.connect(caveDelay)
+
+    const caveGain = audioContext.createGain()
+    caveGain.gain.value = 0
+
+    caveNoise.connect(caveFilter)
+    caveFilter.connect(caveDelay)
+    caveDelay.connect(caveGain)
+    caveGain.connect(masterGain)
+
+    const nodes: SonificationNodes = {
+      masterGain,
+      singleOsc,
+      singleGain,
+      chorusOscillators,
+      chorusGain,
+      lfo,
+      lfoGain,
+      caveNoise,
+      caveFilter,
+      caveDelay,
+      caveFeedback,
+      caveGain,
+    }
+
+    audioContextRef.current = audioContext
+    audioNodesRef.current = nodes
+
+    singleOsc.start()
+    chorusOscillators.forEach((osc) => osc.start())
+    lfo.start()
+    caveNoise.start()
+
+    if (audioContext.state === 'suspended') {
+      audioContext.resume()
+    }
+
+    return () => {
+      audioContext.close()
+      audioContextRef.current = null
+      audioNodesRef.current = null
+    }
+  }, [audioEnabled])
+
+  useEffect(() => {
+    if (audioNodesRef.current) {
+      audioNodesRef.current.masterGain.gain.setTargetAtTime(audioVolume, audioContextRef.current?.currentTime ?? 0, 0.05)
+    }
+  }, [audioVolume])
 
   // Animation loop
   useEffect(() => {
@@ -91,6 +225,9 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
       // Render
       if (simulationRef.current) {
         render(ctx, simulationRef.current)
+        if (audioEnabled && audioContextRef.current && audioNodesRef.current) {
+          updateSonification(simulationRef.current, audioContextRef.current, audioNodesRef.current, audioMode, isPaused)
+        }
       }
     }
 
@@ -101,7 +238,100 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
         cancelAnimationFrame(rafRef.current)
       }
     }
-  }, [isPaused, speed, density, sonarSensitivity, wallRoughness, preset, seed])
+  }, [isPaused, speed, density, sonarSensitivity, wallRoughness, preset, seed, audioEnabled, audioMode, audioVolume])
+
+  const updateSonification = (
+    state: SimulationState,
+    audioContext: AudioContext,
+    nodes: SonificationNodes,
+    mode: ListeningMode,
+    paused: boolean
+  ) => {
+    const { grid, sonarField, disturbanceField, tick } = state
+    let sonarSum = 0
+    let sonarPeak = 0
+    let activeCells = 0
+    let disturbanceSum = 0
+    let batCount = 0
+    let focusedBat: BatCell | null = null
+
+    for (let i = 0; i < sonarField.length; i++) {
+      const value = sonarField[i]
+      sonarSum += value
+      sonarPeak = Math.max(sonarPeak, value)
+      if (value > 1) activeCells += 1
+      disturbanceSum += disturbanceField[i]
+      if (grid[i].occupied && !focusedBat) {
+        focusedBat = grid[i]
+      }
+      if (grid[i].occupied) batCount += 1
+    }
+
+    const avg = sonarSum / sonarField.length
+    const peak = Math.min(1, sonarPeak / 10)
+    const activity = Math.min(1, activeCells / sonarField.length * 6)
+    const densityRatio = batCount / grid.length
+    const disturbanceAvg = disturbanceSum / disturbanceField.length
+    const now = audioContext.currentTime
+
+    const basePulse = Math.max(0, Math.sin(now * (2 + activity * 8)))
+    const pausedGain = paused ? 0 : 1
+
+    const singleTarget = mode === 'single' ? 0.6 * pausedGain : 0
+    const chorusTarget = mode === 'colony' ? 0.5 * pausedGain : 0
+    const caveTarget = mode === 'cave' ? 0.5 * pausedGain : 0
+
+    nodes.singleGain.gain.setTargetAtTime(singleTarget, now, 0.08)
+    nodes.chorusGain.gain.setTargetAtTime(chorusTarget, now, 0.08)
+    nodes.caveGain.gain.setTargetAtTime(caveTarget, now, 0.12)
+
+    if (mode === 'single') {
+      const headingScale = [220, 247, 262, 294, 330, 349, 392, 440]
+      const heading = focusedBat?.heading ?? 0
+      const energy = focusedBat?.energy ?? 4
+      const baseFrequency = headingScale[heading] + energy * 15
+      const chirpFrequency = baseFrequency + peak * 900
+      nodes.singleOsc.frequency.setTargetAtTime(chirpFrequency, now, 0.03)
+      nodes.singleGain.gain.setTargetAtTime(singleTarget * (0.2 + basePulse * 0.8), now, 0.05)
+    }
+
+    if (mode === 'colony') {
+      const baseFrequency = 160 + avg * 45 + densityRatio * 280
+      const detuneSpread = 4 + activity * 18
+      nodes.chorusOscillators.forEach((osc, index) => {
+        const ratio = 1 + index * 0.03
+        osc.frequency.setTargetAtTime(baseFrequency * ratio, now, 0.08)
+        osc.detune.setTargetAtTime((index - 1.5) * detuneSpread * 2, now, 0.08)
+      })
+      nodes.lfo.frequency.setTargetAtTime(0.15 + activity * 0.6, now, 0.1)
+      nodes.chorusGain.gain.setTargetAtTime(chorusTarget * (0.3 + activity * 0.7), now, 0.1)
+    }
+
+    if (mode === 'cave') {
+      const resonance = Math.min(1, (disturbanceAvg / 15) + peak * 0.7 + densityRatio * 0.5)
+      nodes.caveFilter.frequency.setTargetAtTime(180 + avg * 80 + peak * 300, now, 0.1)
+      nodes.caveFilter.Q.setTargetAtTime(0.6 + resonance * 2, now, 0.1)
+      nodes.caveDelay.delayTime.setTargetAtTime(0.12 + densityRatio * 0.18, now, 0.1)
+      nodes.caveFeedback.gain.setTargetAtTime(0.25 + resonance * 0.35, now, 0.1)
+      nodes.caveGain.gain.setTargetAtTime(caveTarget * (0.2 + resonance * 0.8), now, 0.1)
+    }
+
+    if (paused) {
+      nodes.singleGain.gain.setTargetAtTime(0, now, 0.1)
+      nodes.chorusGain.gain.setTargetAtTime(0, now, 0.1)
+      nodes.caveGain.gain.setTargetAtTime(0, now, 0.1)
+    }
+
+    nodes.singleOsc.frequency.setTargetAtTime(nodes.singleOsc.frequency.value, now, 0.01)
+    nodes.chorusOscillators.forEach((osc) => {
+      osc.frequency.setTargetAtTime(osc.frequency.value, now, 0.01)
+    })
+    nodes.caveFilter.frequency.setTargetAtTime(nodes.caveFilter.frequency.value, now, 0.01)
+
+    if (tick % 120 === 0 && mode === 'colony') {
+      nodes.lfoGain.gain.setTargetAtTime(10 + activity * 25, now, 0.2)
+    }
+  }
 
   const render = (ctx: CanvasRenderingContext2D, state: SimulationState) => {
     const { width, height, grid, sonarField, guanoField, disturbanceField } = state
@@ -232,6 +462,10 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
     simulationRef.current = createSimulation(config)
   }
 
+  const handleAudioToggle = () => {
+    setAudioEnabled((prev) => !prev)
+  }
+
   return (
     <div className="flex flex-col items-center space-y-6 p-6">
       {/* Canvas */}
@@ -254,6 +488,61 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
 
       {/* Controls */}
       <div className="w-full max-w-4xl bg-cave-dark border border-cave-light rounded-lg p-6 space-y-4">
+        <div className="rounded-lg border border-cave-light bg-cave-medium/30 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div className="text-bat-primary font-semibold">Echolocation Sonification Engine</div>
+              <p className="text-xs text-gray-400">
+                Frequency-shifted chirps and interference tones from the live sonar field.
+              </p>
+            </div>
+            <button
+              onClick={handleAudioToggle}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                audioEnabled
+                  ? 'bg-bat-primary text-white'
+                  : 'bg-cave-light text-gray-300 hover:bg-cave-medium'
+              }`}
+            >
+              {audioEnabled ? 'Disable Audio' : 'Enable Audio'}
+            </button>
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div>
+              <label className="block text-bat-secondary text-sm mb-2">
+                Listening Mode
+              </label>
+              <select
+                value={audioMode}
+                onChange={(e) => setAudioMode(e.target.value as ListeningMode)}
+                className="w-full rounded-lg border border-cave-light bg-cave-dark px-3 py-2 text-sm text-gray-200"
+                disabled={!audioEnabled}
+              >
+                <option value="single">Single Bat POV</option>
+                <option value="colony">Colony Chorus</option>
+                <option value="cave">Cave Resonance</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-bat-secondary text-sm mb-2">
+                Output Level: {(audioVolume * 100).toFixed(0)}%
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={audioVolume}
+                onChange={(e) => setAudioVolume(parseFloat(e.target.value))}
+                className="w-full"
+                disabled={!audioEnabled}
+              />
+            </div>
+            <div className="text-xs text-gray-500 md:pt-6">
+              Best with headphones. Audio begins after enabling due to browser policies.
+            </div>
+          </div>
+        </div>
         <div className="flex flex-wrap gap-4 justify-center">
           <button
             onClick={() => setIsPaused(!isPaused)}
