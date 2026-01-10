@@ -7,7 +7,9 @@ import {
   addDisturbance,
   type SimulationState,
   type SimulationConfig,
+  type BehaviorMode,
 } from '@/lib/batCaveSimulation'
+import { BatCaveAudioEngine } from '@/lib/batCaveAudio'
 
 interface CaveSimulationProps {
   onViewerCountUpdate?: (count: number) => void
@@ -17,15 +19,33 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isPaused, setIsPaused] = useState(false)
   const [speed, setSpeed] = useState(1)
-  const [density, setDensity] = useState(0.08) // Reduced for better performance
+  const [density, setDensity] = useState(0.008) // Reduced by order of magnitude
   const [sonarSensitivity, setSonarSensitivity] = useState(0.5)
   const [wallRoughness, setWallRoughness] = useState(0.5)
   const [preset, setPreset] = useState<'random' | 'maternity-spiral' | 'guano-vortex' | 'tourist-panic' | 'cape-shadow'>('random')
   const [seed, setSeed] = useState(42)
+  const [behaviorMode, setBehaviorMode] = useState<BehaviorMode>('calm')
+  const [audioEnabled, setAudioEnabled] = useState(false)
+  const [masterVolume, setMasterVolume] = useState(0.3)
+  const [leaderGravityMean, setLeaderGravityMean] = useState(0.3)
+  const [leaderGravityVariance, setLeaderGravityVariance] = useState(0.15)
+  const [leaderInfluence, setLeaderInfluence] = useState(0.5)
 
   const simulationRef = useRef<SimulationState | null>(null)
+  const audioEngineRef = useRef<BatCaveAudioEngine | null>(null)
   const rafRef = useRef<number>(0)
   const lastTickRef = useRef<number>(0)
+
+  // Initialize audio engine
+  useEffect(() => {
+    audioEngineRef.current = new BatCaveAudioEngine({
+      masterVolume,
+    })
+
+    return () => {
+      audioEngineRef.current?.destroy()
+    }
+  }, [])
 
   // Initialize simulation
   useEffect(() => {
@@ -44,11 +64,15 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
       wallRoughness,
       seed,
       preset,
+      behaviorMode,
+      leaderGravityMean,
+      leaderGravityVariance,
+      leaderInfluence,
     }
 
     simulationRef.current = createSimulation(config)
     lastTickRef.current = 0 // Reset timing when simulation is recreated
-  }, [seed, preset]) // Reinitialize on seed/preset change
+  }, [seed, preset, behaviorMode, density, sonarSensitivity, wallRoughness, leaderGravityMean, leaderGravityVariance, leaderInfluence])
 
   // Animation loop
   useEffect(() => {
@@ -82,6 +106,9 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
             sonarSensitivity,
             wallRoughness,
             seed: simulationRef.current.seed,
+            leaderGravityMean,
+            leaderGravityVariance,
+            leaderInfluence,
           }
           updateSimulation(simulationRef.current, config)
           lastTickRef.current = currentTime
@@ -91,6 +118,11 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
       // Render
       if (simulationRef.current) {
         render(ctx, simulationRef.current)
+
+        // Update audio based on simulation metrics
+        if (audioEngineRef.current && audioEnabled) {
+          audioEngineRef.current.update(simulationRef.current.metrics)
+        }
       }
     }
 
@@ -101,7 +133,7 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
         cancelAnimationFrame(rafRef.current)
       }
     }
-  }, [isPaused, speed, density, sonarSensitivity, wallRoughness, preset, seed])
+  }, [isPaused, speed, density, sonarSensitivity, wallRoughness, preset, seed, behaviorMode, audioEnabled])
 
   const render = (ctx: CanvasRenderingContext2D, state: SimulationState) => {
     const { width, height, grid, sonarField, guanoField, disturbanceField } = state
@@ -183,6 +215,26 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
         const energy = grid[i].energy
         const batEmoji = batEmojis[0] // Simple for now, could add variety
 
+        // Color based on leader gravity (0 = follower, 1 = leader)
+        const gravity = grid[i].leaderGravity
+        // Gradient: dim gray-blue (followers) -> purple (mid) -> bright yellow (leaders)
+        let color: string
+        if (gravity < 0.5) {
+          // 0 to 0.5: gray-blue to purple
+          const t = gravity * 2 // 0 to 1
+          const r = Math.floor(107 + (167 - 107) * t)
+          const g = Math.floor(114 + (139 - 114) * t)
+          const b = Math.floor(128 + (246 - 128) * t)
+          color = `rgb(${r}, ${g}, ${b})`
+        } else {
+          // 0.5 to 1: purple to bright yellow
+          const t = (gravity - 0.5) * 2 // 0 to 1
+          const r = Math.floor(167 + (251 - 167) * t)
+          const g = Math.floor(139 + (191 - 139) * t)
+          const b = Math.floor(246 + (36 - 246) * t)
+          color = `rgb(${r}, ${g}, ${b})`
+        }
+
         // Heading-based rotation
         const heading = grid[i].heading
         const angle = (heading * Math.PI) / 4
@@ -191,11 +243,12 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
         ctx.translate(cx, cy)
         ctx.rotate(angle)
 
-        // Add glow effect for bats
-        ctx.shadowColor = '#a78bfa'
-        ctx.shadowBlur = 8
+        // Add glow effect colored by leader gravity
+        ctx.shadowColor = color
+        ctx.shadowBlur = 8 + gravity * 8 // Stronger glow for leaders
 
-        // Draw bat emoji
+        // Draw bat emoji with color filter
+        ctx.fillStyle = color
         ctx.fillText(batEmoji, 0, 0)
 
         ctx.shadowBlur = 0
@@ -227,9 +280,34 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
       wallRoughness,
       seed,
       preset,
+      behaviorMode,
+      leaderGravityMean,
+      leaderGravityVariance,
+      leaderInfluence,
     }
 
     simulationRef.current = createSimulation(config)
+  }
+
+  const toggleAudio = async () => {
+    if (!audioEngineRef.current) return
+
+    if (audioEnabled) {
+      await audioEngineRef.current.suspend()
+      setAudioEnabled(false)
+    } else {
+      if (!audioEngineRef.current.isEnabled()) {
+        await audioEngineRef.current.initialize()
+      } else {
+        await audioEngineRef.current.resume()
+      }
+      setAudioEnabled(true)
+    }
+  }
+
+  const handleVolumeChange = (volume: number) => {
+    setMasterVolume(volume)
+    audioEngineRef.current?.setConfig({ masterVolume: volume })
   }
 
   return (
@@ -244,11 +322,26 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
           onClick={handleCanvasClick}
           style={{ background: '#0a0a0a' }}
         />
-        <div className="absolute top-4 right-4 bg-cave-dark bg-opacity-90 px-4 py-2 rounded-lg text-sm">
+        <div className="absolute top-4 right-4 bg-cave-dark bg-opacity-90 px-4 py-2 rounded-lg text-sm space-y-1">
           <div className="text-bat-primary font-bold">Collective Echolocation</div>
           <div className="text-gray-400">
             Tick: {simulationRef.current?.tick || 0}
           </div>
+          {simulationRef.current && (
+            <>
+              <div className="text-bat-secondary text-xs">
+                Mode: <span className="capitalize">{simulationRef.current.behaviorMode}</span>
+              </div>
+              <div className="text-gray-500 text-xs">
+                Bats: {simulationRef.current.metrics.batCount} |
+                Clusters: {simulationRef.current.metrics.clusterCount}
+              </div>
+              <div className="text-gray-500 text-xs">
+                Velocity: {(simulationRef.current.metrics.averageVelocity * 100).toFixed(0)}% |
+                Chaos: {(simulationRef.current.metrics.chaosLevel * 100).toFixed(0)}%
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -266,6 +359,16 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
             className="px-6 py-2 bg-cave-light hover:bg-cave-medium text-gray-300 rounded-lg font-medium transition-colors"
           >
             Reset
+          </button>
+          <button
+            onClick={toggleAudio}
+            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+              audioEnabled
+                ? 'bg-bat-primary hover:bg-bat-secondary text-white'
+                : 'bg-cave-light hover:bg-cave-medium text-gray-300'
+            }`}
+          >
+            Audio: {audioEnabled ? 'ON' : 'OFF'}
           </button>
         </div>
 
@@ -289,13 +392,13 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
           {/* Density */}
           <div>
             <label className="block text-bat-secondary text-sm mb-2">
-              Density: {(density * 100).toFixed(0)}%
+              Density: {(density * 100).toFixed(1)}%
             </label>
             <input
               type="range"
-              min="0.05"
+              min="0.001"
               max="0.3"
-              step="0.01"
+              step="0.001"
               value={density}
               onChange={(e) => setDensity(parseFloat(e.target.value))}
               className="w-full"
@@ -333,6 +436,107 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
               className="w-full"
             />
           </div>
+
+          {/* Audio Volume */}
+          <div>
+            <label className="block text-bat-secondary text-sm mb-2">
+              Audio Volume: {(masterVolume * 100).toFixed(0)}%
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={masterVolume}
+              onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+              className="w-full"
+              disabled={!audioEnabled}
+            />
+          </div>
+        </div>
+
+        {/* Leader Gravity Controls */}
+        <div className="border-t border-cave-light pt-4">
+          <h3 className="text-bat-secondary text-sm font-medium mb-3">Leader Gravity (Gaussian Distribution)</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Leader Gravity Mean */}
+            <div>
+              <label className="block text-bat-secondary text-sm mb-2">
+                Mean: {leaderGravityMean.toFixed(2)}
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={leaderGravityMean}
+                onChange={(e) => setLeaderGravityMean(parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-500 mt-1">Center of leader distribution</p>
+            </div>
+
+            {/* Leader Gravity Variance */}
+            <div>
+              <label className="block text-bat-secondary text-sm mb-2">
+                Variance: {leaderGravityVariance.toFixed(2)}
+              </label>
+              <input
+                type="range"
+                min="0.05"
+                max="0.4"
+                step="0.05"
+                value={leaderGravityVariance}
+                onChange={(e) => setLeaderGravityVariance(parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-500 mt-1">Spread of leadership values</p>
+            </div>
+
+            {/* Leader Influence */}
+            <div>
+              <label className="block text-bat-secondary text-sm mb-2">
+                Influence: {(leaderInfluence * 100).toFixed(0)}%
+              </label>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={leaderInfluence}
+                onChange={(e) => setLeaderInfluence(parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <p className="text-xs text-gray-500 mt-1">Strength of leader attraction</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Behavior Mode */}
+        <div>
+          <label className="block text-bat-secondary text-sm mb-2">Behavior Mode</label>
+          <div className="flex flex-wrap gap-2">
+            {(['calm', 'roosting', 'foraging', 'panic', 'chaos'] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setBehaviorMode(mode)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  behaviorMode === mode
+                    ? 'bg-bat-primary text-white'
+                    : 'bg-cave-medium text-gray-400 hover:bg-cave-light'
+                }`}
+              >
+                {mode.charAt(0).toUpperCase() + mode.slice(1)}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            {behaviorMode === 'calm' && 'Balanced flocking with gentle movement'}
+            {behaviorMode === 'roosting' && 'Tight clustering with minimal movement'}
+            {behaviorMode === 'foraging' && 'Active exploration with dispersed behavior'}
+            {behaviorMode === 'panic' && 'Chaotic scattering from disturbances'}
+            {behaviorMode === 'chaos' && 'Unpredictable emergent patterns'}
+          </p>
         </div>
 
         {/* Presets */}
