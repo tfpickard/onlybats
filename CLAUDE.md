@@ -1,8 +1,53 @@
 # Claude Integration Guide - OnlyBats.org
 
+## Purpose
+This document provides guidelines for using Claude models to build and maintain OnlyBats.org. These instructions override default behavior and should be followed exactly.
+
 ## Project Overview
 
 OnlyBats.org is a Next.js 14 website presenting itself as a serious bat conservation and research organization. The humor is entirely unintentional - the site takes itself extremely seriously while pursuing questionable priorities (like monitoring Batman as a "misinformation threat"). The project uses TypeScript, Tailwind CSS, Prisma, and NextAuth.js, optimized for Vercel deployment.
+
+## Core Principles
+
+### Production-First Mindset
+- **ALWAYS** generate production-grade code and documentation
+- **NEVER** create MVPs, scaffolds, or placeholder implementations
+- **NO PLACEHOLDERS**: Every component, function, and feature must be fully implemented
+- **NO TODOs** or “implement later” comments
+- **COMPLETE FEATURES**: If a feature cannot be fully implemented, discuss alternatives first
+
+### Current Stack Alignment
+- Next.js 14 (App Router)
+- React 18
+- TypeScript (strict)
+- Tailwind CSS
+- Prisma ORM
+- NextAuth.js
+- npm (current package manager)
+
+### Code Quality Standards
+- **Production-ready**: Every line of code must be production-quality
+- **Type-safe**: Comprehensive TypeScript types, avoid `any`
+- **Secure**: Follow OWASP top 10, validate input, sanitize output, use environment variables
+- **Performant**: Optimize bundle size, lazy load, code split, use caching strategies
+- **Accessible**: WCAG 2.1 AA compliance minimum
+- **SEO-optimized**: Meta tags, Open Graph/Twitter cards, sitemap/robots when applicable
+
+## Multi-Agent Architecture
+
+### Agent Roles & Responsibilities
+- **Product Owner**: requirements, acceptance criteria, prioritization
+- **Architect**: system design, data models, API contracts, technical decisions
+- **Backend Developer**: API routes, Prisma schema, authentication, business logic
+- **Frontend Developer**: React components, state management, UX/a11y, performance
+- **QA Engineer**: unit/integration/E2E testing, accessibility audits
+- **Test Engineer**: CI/CD, automation, coverage reporting
+- **DevOps Agent**: Vercel deployment, secrets, monitoring, backups
+
+### Coordination Protocol
+```
+Product Owner → Architect → [Backend || Frontend] → QA → Test Engineer → DevOps → Product Owner
+```
 
 ## Development Guidelines
 
@@ -71,21 +116,21 @@ OnlyBats.org is a Next.js 14 website presenting itself as a serious bat conserva
 - Keep bundles reasonable (<500KB gzipped)
 - Tree-shake unused dependencies
 
-### Architecture Decisions
+## Architecture Decisions
 
-#### Why Cellular Automata?
+### Why Cellular Automata?
 - Perpetual motion from any initial state
 - Emergent bat-like behavior without explicit AI
 - Deterministic (seeded RNG)
 - Performant with optimized update rules
 
-#### Why Polling Instead of SSE/WebSocket in Vercel?
+### Why Polling Instead of SSE/WebSocket in Vercel?
 - Vercel serverless functions have 10-second timeout
 - Long-lived connections not supported
 - Polling is simple, reliable, Vercel-friendly
 - External WebSocket server is opt-in enhancement
 
-#### Why NextAuth.js?
+### Why NextAuth.js?
 - Simple credential-based auth for MVP
 - Easily extensible to OAuth later
 - Session management via JWT
@@ -134,7 +179,7 @@ Edit `lib/batCaveSimulation.ts`:
 ## Deployment Checklist
 
 ### Pre-Deploy
-- [ ] Run `npm run build` locally (check for errors)
+- [ ] Run `npm run build` locally
 - [ ] Test all pages and features
 - [ ] Check mobile responsiveness
 - [ ] Verify environment variables in `.env.example`
@@ -198,57 +243,7 @@ Edit `lib/batCaveSimulation.ts`:
 | Vote | Chirp/hiss voting |
 | Chirp | Microchirp posts |
 | Donation | Donation pledges |
-| Whisper | Cave whisper messages |
-
-## Recommended Claude Prompts
-
-### For Feature Development
-```
-Add a new [feature] to OnlyBats.org. Maintain the grassroots,
-playful tone. Focus on bats, not capes. Make it Vercel-friendly
-(no long-lived connections). Use TypeScript and Tailwind CSS.
-```
-
-### For Bug Fixes
-```
-Fix [issue] in OnlyBats.org. Ensure the solution works on Vercel.
-Maintain existing tone and functionality. Test edge cases.
-```
-
-### For Refactoring
-```
-Refactor [component/file] in OnlyBats.org. Improve performance
-and code quality. Keep existing functionality. Add TypeScript
-types if missing.
-```
-
-## Key Design Principles
-
-1. **Chiroptera-Centric Mission**: All content focuses on bat conservation and research; maintains scientific character at all times
-2. **Overly-Serious Presentation**: Presents as legitimate nonprofit; takes absurd priorities (Batman monitoring) with complete earnestness
-3. **Unintentional Humor**: Never winks at the audience; genuinely believes monitoring costume-based entertainment is important conservation work
-4. **Academic Language**: Uses rigorous, evidence-based terminology; "peer-reviewed," "scientifically validated," "evidence-based methodology"
-5. **Vercel-Optimized**: No long-lived connections, serverless-friendly
-6. **Performance**: Smooth simulation, fast page loads, optimized bundles
-7. **No Self-Awareness**: Implicitly validates questionable priorities without stepping back to question them
-8. **Accessible**: Works without JavaScript where possible, responsive design
-
-## Content Guidelines
-
-- **Always serious, never playful**: This is a real conservation organization (in the site's mind)
-- **Batman monitoring is legitimate work**: Treat "misinformation monitoring" with the same gravity as actual bat research
-- **"Guano economy" is scientific**: Present the nutrient-cycling economic model as serious conservation philosophy
-- **No jokes or satire markers**: The humor comes from taking everything too seriously, not from being self-aware
-- **Validate the absurd**: Never question whether monitoring Batman makes sense; it's obviously important bat conservation work
-
-## External Resources
-
-- [Next.js Docs](https://nextjs.org/docs)
-- [Prisma Docs](https://www.prisma.io/docs)
-- [NextAuth.js Docs](https://next-auth.js.org)
-- [Tailwind CSS Docs](https://tailwindcss.com/docs)
-- [Vercel Docs](https://vercel.com/docs)
 
 ---
 
-**Mission Statement**: Evidence-based chiropteran conservation through rigorous scientific methodology and community-supported research infrastructure.
+**Remember**: Every line of code should read as production-ready and tonally consistent with OnlyBats.org.

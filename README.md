@@ -26,6 +26,16 @@ OnlyBats.org is a satirical website that celebrates actual bats while gently moc
 - **Auth**: NextAuth.js
 - **Deployment**: Optimized for Vercel
 
+## 📚 Documentation
+
+- **[QUICKSTART.md](./QUICKSTART.md)** - Step-by-step setup guide
+- **[CLAUDE.md](./CLAUDE.md)** - AI/Claude integration guidelines
+- **[AGENTS.md](./AGENTS.md)** - Multi-agent development workflows
+- **[CODEX.md](./CODEX.md)** - Code generation standards
+- **[DEVELOPMENT.md](./DEVELOPMENT.md)** - Development standards and best practices
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Architectural patterns and decisions
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Vercel deployment guide
+
 ## 📦 Installation
 
 ### Prerequisites
