@@ -5,10 +5,24 @@
 
 export type Direction = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 // 8 directions
 
+export type BehaviorMode = 'calm' | 'roosting' | 'foraging' | 'panic' | 'chaos'
+
 export interface BatCell {
   occupied: boolean
   heading: Direction
   energy: number // 0-7
+  velocity: number // 0-1, tracks recent movement success
+}
+
+export interface SimulationMetrics {
+  batCount: number
+  averageVelocity: number
+  averageEnergy: number
+  clusterCount: number
+  largestClusterSize: number
+  totalDisturbance: number
+  chaosLevel: number // 0-1, measure of entropy/unpredictability
+  behaviorMode: BehaviorMode
 }
 
 export interface SimulationState {
@@ -20,6 +34,8 @@ export interface SimulationState {
   disturbanceField: Float32Array
   tick: number
   seed: number
+  metrics: SimulationMetrics
+  behaviorMode: BehaviorMode
 }
 
 export interface SimulationConfig {
@@ -30,6 +46,7 @@ export interface SimulationConfig {
   wallRoughness: number // 0-1
   seed: number
   preset?: 'random' | 'maternity-spiral' | 'guano-vortex' | 'tourist-panic' | 'cape-shadow'
+  behaviorMode?: BehaviorMode
 }
 
 // Direction vectors (8-way)
@@ -63,7 +80,7 @@ class SeededRandom {
 }
 
 export function createSimulation(config: SimulationConfig): SimulationState {
-  const { width, height, density, seed, preset } = config
+  const { width, height, density, seed, preset, behaviorMode = 'calm' } = config
   const size = width * height
   const rng = new SeededRandom(seed)
 
@@ -71,6 +88,7 @@ export function createSimulation(config: SimulationConfig): SimulationState {
     occupied: false,
     heading: 0 as Direction,
     energy: 5,
+    velocity: 0.5,
   }))
 
   const sonarField = new Float32Array(size)
@@ -90,6 +108,17 @@ export function createSimulation(config: SimulationConfig): SimulationState {
     initRandom(grid, width, height, density, rng)
   }
 
+  const metrics: SimulationMetrics = {
+    batCount: 0,
+    averageVelocity: 0,
+    averageEnergy: 0,
+    clusterCount: 0,
+    largestClusterSize: 0,
+    totalDisturbance: 0,
+    chaosLevel: 0,
+    behaviorMode,
+  }
+
   return {
     width,
     height,
@@ -99,6 +128,8 @@ export function createSimulation(config: SimulationConfig): SimulationState {
     disturbanceField,
     tick: 0,
     seed,
+    metrics,
+    behaviorMode,
   }
 }
 
@@ -233,6 +264,91 @@ export function addDisturbance(
   }
 }
 
+/**
+ * Behavior mode parameters for different collective behaviors
+ */
+interface BehaviorParameters {
+  alignment: number // How much to match neighbor headings
+  cohesion: number // How much to move toward group center
+  separation: number // How much to avoid crowding
+  disturbanceAvoidance: number // How much to flee disturbances
+  trailFollowing: number // How much to follow guano trails
+  randomness: number // Noise multiplier for chaos
+}
+
+function getBehaviorParameters(mode: BehaviorMode): BehaviorParameters {
+  switch (mode) {
+    case 'calm':
+      return {
+        alignment: 3,
+        cohesion: 2,
+        separation: 4,
+        disturbanceAvoidance: 5,
+        trailFollowing: 0.15,
+        randomness: 8,
+      }
+    case 'roosting':
+      return {
+        alignment: 5, // Strong alignment when roosting
+        cohesion: 8, // Very strong cohesion - cluster tightly
+        separation: 2, // Low separation - OK to be close
+        disturbanceAvoidance: 3, // Less reactive
+        trailFollowing: 0.05,
+        randomness: 2, // Minimal randomness
+      }
+    case 'foraging':
+      return {
+        alignment: 2, // Medium alignment
+        cohesion: 1, // Low cohesion - spread out
+        separation: 6, // High separation - explore independently
+        disturbanceAvoidance: 4,
+        trailFollowing: 0.25, // Follow trails more
+        randomness: 12, // Higher randomness for exploration
+      }
+    case 'panic':
+      return {
+        alignment: 1, // Low alignment - chaotic
+        cohesion: 0, // No cohesion - scatter
+        separation: 8, // Very high separation
+        disturbanceAvoidance: 15, // Extreme avoidance
+        trailFollowing: 0,
+        randomness: 20, // Very high randomness
+      }
+    case 'chaos':
+      return {
+        alignment: 1,
+        cohesion: 1,
+        separation: 3,
+        disturbanceAvoidance: 2,
+        trailFollowing: 0.1,
+        randomness: 30, // Maximum randomness
+      }
+  }
+}
+
+/**
+ * Lorenz attractor for chaotic movement patterns
+ * Returns a value influenced by chaotic dynamics
+ */
+function getLorenzAttractor(x: number, y: number, t: number): number {
+  const sigma = 10
+  const rho = 28
+  const beta = 8 / 3
+
+  // Use normalized position and time to generate chaos
+  const tx = (x - 0.5) * 20
+  const ty = (y - 0.5) * 20
+  const tz = (t % 1000) / 10
+
+  // Simplified Lorenz equations (single step approximation)
+  const dx = sigma * (ty - tx)
+  const dy = tx * (rho - tz) - ty
+  const dz = tx * ty - beta * tz
+
+  // Return combined influence
+  return Math.sin(dx * 0.1) * Math.cos(dy * 0.1) + Math.sin(dz * 0.05)
+}
+
 export function updateSimulation(
   state: SimulationState,
   config: SimulationConfig
@@ -351,6 +467,9 @@ export function updateSimulation(
     }
   }
 
+  // Behavior mode parameters
+  const behaviorParams = getBehaviorParameters(state.behaviorMode)
+
   // Second pass: Movement with flocking behavior
   for (let i = 0; i < grid.length; i++) {
     if (!grid[i].occupied) continue
@@ -382,13 +501,13 @@ export function updateSimulation(
           score -= 100
         }
 
-        // FLOCKING BEHAVIORS:
+        // FLOCKING BEHAVIORS (modulated by behavior mode):
 
         // 1. Alignment: Prefer to move in same direction as neighbors
         if (flock.nearbyCount > 0) {
           const headingDiff = Math.abs(newHeading - flock.avgHeading)
           const alignmentBonus = Math.max(0, 8 - headingDiff)
-          score += alignmentBonus * 3
+          score += alignmentBonus * behaviorParams.alignment
         }
 
         // 2. Cohesion: Move toward center of nearby flock
@@ -398,19 +517,19 @@ export function updateSimulation(
           const centerAngle = Math.atan2(toCenterY, toCenterX)
           const targetHeading = Math.round((centerAngle / (Math.PI * 2)) * 8) % 8
           const cohesionDiff = Math.abs(newHeading - targetHeading)
-          score += Math.max(0, 8 - cohesionDiff) * 2
+          score += Math.max(0, 8 - cohesionDiff) * behaviorParams.cohesion
         }
 
         // 3. Separation: Avoid getting too close (checked via sonar)
         const crowdedness = sonarField[nidx]
         if (crowdedness > 5) {
-          score -= crowdedness * 4 // Strong separation
+          score -= crowdedness * behaviorParams.separation * 0.8
         } else if (crowdedness > 2) {
-          score -= crowdedness * 2 // Moderate separation
+          score -= crowdedness * behaviorParams.separation * 0.4
         }
 
-        // 4. Flee disturbance (strong avoidance)
-        score -= disturbanceField[nidx] * 5
+        // 4. Flee disturbance (behavior-dependent)
+        score -= disturbanceField[nidx] * behaviorParams.disturbanceAvoidance
 
         // 5. Prefer guano trails perpendicular (swirling behavior)
         const perpHeading1 = ((newHeading + 2) % 8) as Direction
@@ -424,10 +543,10 @@ export function updateSimulation(
         const py2 = ny + pdy2
 
         if (px1 >= 0 && px1 < width && py1 >= 0 && py1 < height) {
-          score += guanoField[py1 * width + px1] * 0.15
+          score += guanoField[py1 * width + px1] * behaviorParams.trailFollowing
         }
         if (px2 >= 0 && px2 < width && py2 >= 0 && py2 < height) {
-          score += guanoField[py2 * width + px2] * 0.15
+          score += guanoField[py2 * width + px2] * behaviorParams.trailFollowing
         }
 
         // 6. Energy-based behavior: tired bats seek roost
@@ -436,10 +555,16 @@ export function updateSimulation(
           const distToEdge = Math.min(x, width - x, y, height - y)
           score += (10 - distToEdge) * 0.5
         }
+
+        // 7. Chaos mode: Add strange attractor influence
+        if (state.behaviorMode === 'chaos') {
+          const chaosInfluence = getLorenzAttractor(x / width, y / height, state.tick)
+          score += chaosInfluence * 10
+        }
       }
 
       // Add controlled randomness for natural variation
-      score += (rng.next() - 0.5) * wallRoughness * 8
+      score += (rng.next() - 0.5) * wallRoughness * behaviorParams.randomness
 
       scores.push(score)
     }
@@ -471,18 +596,21 @@ export function updateSimulation(
     if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
       const nidx = ny * width + nx
       if (!newGrid[nidx].occupied) {
-        // Successful move: gain energy
+        // Successful move: gain energy and velocity
         newGrid[i].occupied = false
         newGrid[nidx].occupied = true
         newGrid[nidx].heading = newHeading
         newGrid[nidx].energy = Math.min(7, cell.energy + 1)
+        newGrid[nidx].velocity = Math.min(1, cell.velocity + 0.1) // Accelerate
       } else {
-        // Blocked: lose energy
+        // Blocked: lose energy and velocity
         newGrid[i].energy = Math.max(0, cell.energy - 1)
+        newGrid[i].velocity = Math.max(0, cell.velocity - 0.2) // Decelerate
       }
     } else {
-      // Hit wall: lose energy
+      // Hit wall: lose energy and velocity
       newGrid[i].energy = Math.max(0, cell.energy - 1)
+      newGrid[i].velocity = Math.max(0, cell.velocity - 0.2) // Decelerate
     }
   }
 
@@ -553,4 +681,126 @@ export function updateSimulation(
     const cy = rng.nextInt(height)
     addDisturbance(disturbanceField, width, height, cx, cy, 30)
   }
+
+  // Update metrics and determine behavior mode
+  calculateMetrics(state)
+}
+
+/**
+ * Calculate simulation metrics using efficient clustering algorithm
+ */
+function calculateMetrics(state: SimulationState): void {
+  const { width, height, grid, disturbanceField } = state
+  let batCount = 0
+  let totalVelocity = 0
+  let totalEnergy = 0
+  let totalDisturbance = 0
+
+  // Count bats and sum properties
+  for (let i = 0; i < grid.length; i++) {
+    if (grid[i].occupied) {
+      batCount++
+      totalVelocity += grid[i].velocity
+      totalEnergy += grid[i].energy
+    }
+    totalDisturbance += disturbanceField[i]
+  }
+
+  // Calculate clusters using union-find algorithm
+  const parent = new Int32Array(grid.length)
+  for (let i = 0; i < parent.length; i++) parent[i] = i
+
+  function find(x: number): number {
+    if (parent[x] !== x) parent[x] = find(parent[x])
+    return parent[x]
+  }
+
+  function union(x: number, y: number): void {
+    parent[find(x)] = find(y)
+  }
+
+  // Connect adjacent bats
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const idx = y * width + x
+      if (!grid[idx].occupied) continue
+
+      // Check 4-connected neighbors for clustering
+      const neighbors = [
+        [x + 1, y],
+        [x, y + 1],
+        [x + 1, y + 1],
+        [x - 1, y + 1],
+      ]
+
+      for (const [nx, ny] of neighbors) {
+        if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+          const nidx = ny * width + nx
+          if (grid[nidx].occupied) {
+            union(idx, nidx)
+          }
+        }
+      }
+    }
+  }
+
+  // Count cluster sizes
+  const clusterSizes = new Map<number, number>()
+  for (let i = 0; i < grid.length; i++) {
+    if (grid[i].occupied) {
+      const root = find(i)
+      clusterSizes.set(root, (clusterSizes.get(root) || 0) + 1)
+    }
+  }
+
+  const clusterCount = clusterSizes.size
+  const largestClusterSize = clusterCount > 0 ? Math.max(...clusterSizes.values()) : 0
+
+  // Calculate chaos level (based on velocity variance and disturbance)
+  let velocityVariance = 0
+  if (batCount > 0) {
+    const avgVel = totalVelocity / batCount
+    for (let i = 0; i < grid.length; i++) {
+      if (grid[i].occupied) {
+        const diff = grid[i].velocity - avgVel
+        velocityVariance += diff * diff
+      }
+    }
+    velocityVariance /= batCount
+  }
+
+  const normalizedDisturbance = Math.min(1, totalDisturbance / (width * height * 10))
+  const chaosLevel = Math.min(1, velocityVariance * 2 + normalizedDisturbance * 0.5)
+
+  // Determine behavior mode based on state
+  let behaviorMode: BehaviorMode = state.behaviorMode
+
+  // Auto-transition behavior modes based on conditions
+  if (normalizedDisturbance > 0.3) {
+    behaviorMode = 'panic'
+  } else if (chaosLevel > 0.7) {
+    behaviorMode = 'chaos'
+  } else if (batCount > 0 && totalVelocity / batCount < 0.3) {
+    behaviorMode = 'roosting'
+  } else if (clusterCount > 0 && largestClusterSize / batCount > 0.6) {
+    behaviorMode = 'roosting'
+  } else if (totalVelocity / Math.max(batCount, 1) > 0.6) {
+    behaviorMode = 'foraging'
+  } else {
+    behaviorMode = 'calm'
+  }
+
+  // Update metrics
+  state.metrics = {
+    batCount,
+    averageVelocity: batCount > 0 ? totalVelocity / batCount : 0,
+    averageEnergy: batCount > 0 ? totalEnergy / batCount : 0,
+    clusterCount,
+    largestClusterSize,
+    totalDisturbance,
+    chaosLevel,
+    behaviorMode,
+  }
+
+  state.behaviorMode = behaviorMode
 }

@@ -7,7 +7,9 @@ import {
   addDisturbance,
   type SimulationState,
   type SimulationConfig,
+  type BehaviorMode,
 } from '@/lib/batCaveSimulation'
+import { BatCaveAudioEngine } from '@/lib/batCaveAudio'
 
 interface CaveSimulationProps {
   onViewerCountUpdate?: (count: number) => void
@@ -22,10 +24,25 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
   const [wallRoughness, setWallRoughness] = useState(0.5)
   const [preset, setPreset] = useState<'random' | 'maternity-spiral' | 'guano-vortex' | 'tourist-panic' | 'cape-shadow'>('random')
   const [seed, setSeed] = useState(42)
+  const [behaviorMode, setBehaviorMode] = useState<BehaviorMode>('calm')
+  const [audioEnabled, setAudioEnabled] = useState(false)
+  const [masterVolume, setMasterVolume] = useState(0.3)
 
   const simulationRef = useRef<SimulationState | null>(null)
+  const audioEngineRef = useRef<BatCaveAudioEngine | null>(null)
   const rafRef = useRef<number>(0)
   const lastTickRef = useRef<number>(0)
+
+  // Initialize audio engine
+  useEffect(() => {
+    audioEngineRef.current = new BatCaveAudioEngine({
+      masterVolume,
+    })
+
+    return () => {
+      audioEngineRef.current?.destroy()
+    }
+  }, [])
 
   // Initialize simulation
   useEffect(() => {
@@ -44,11 +61,12 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
       wallRoughness,
       seed,
       preset,
+      behaviorMode,
     }
 
     simulationRef.current = createSimulation(config)
     lastTickRef.current = 0 // Reset timing when simulation is recreated
-  }, [seed, preset]) // Reinitialize on seed/preset change
+  }, [seed, preset, behaviorMode, density, sonarSensitivity, wallRoughness])
 
   // Animation loop
   useEffect(() => {
@@ -91,6 +109,11 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
       // Render
       if (simulationRef.current) {
         render(ctx, simulationRef.current)
+
+        // Update audio based on simulation metrics
+        if (audioEngineRef.current && audioEnabled) {
+          audioEngineRef.current.update(simulationRef.current.metrics)
+        }
       }
     }
 
@@ -101,7 +124,7 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
         cancelAnimationFrame(rafRef.current)
       }
     }
-  }, [isPaused, speed, density, sonarSensitivity, wallRoughness, preset, seed])
+  }, [isPaused, speed, density, sonarSensitivity, wallRoughness, preset, seed, behaviorMode, audioEnabled])
 
   const render = (ctx: CanvasRenderingContext2D, state: SimulationState) => {
     const { width, height, grid, sonarField, guanoField, disturbanceField } = state
@@ -227,9 +250,31 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
       wallRoughness,
       seed,
       preset,
+      behaviorMode,
     }
 
     simulationRef.current = createSimulation(config)
+  }
+
+  const toggleAudio = async () => {
+    if (!audioEngineRef.current) return
+
+    if (audioEnabled) {
+      await audioEngineRef.current.suspend()
+      setAudioEnabled(false)
+    } else {
+      if (!audioEngineRef.current.isEnabled()) {
+        await audioEngineRef.current.initialize()
+      } else {
+        await audioEngineRef.current.resume()
+      }
+      setAudioEnabled(true)
+    }
+  }
+
+  const handleVolumeChange = (volume: number) => {
+    setMasterVolume(volume)
+    audioEngineRef.current?.setConfig({ masterVolume: volume })
   }
 
   return (
@@ -244,11 +289,26 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
           onClick={handleCanvasClick}
           style={{ background: '#0a0a0a' }}
         />
-        <div className="absolute top-4 right-4 bg-cave-dark bg-opacity-90 px-4 py-2 rounded-lg text-sm">
+        <div className="absolute top-4 right-4 bg-cave-dark bg-opacity-90 px-4 py-2 rounded-lg text-sm space-y-1">
           <div className="text-bat-primary font-bold">Collective Echolocation</div>
           <div className="text-gray-400">
             Tick: {simulationRef.current?.tick || 0}
           </div>
+          {simulationRef.current && (
+            <>
+              <div className="text-bat-secondary text-xs">
+                Mode: <span className="capitalize">{simulationRef.current.behaviorMode}</span>
+              </div>
+              <div className="text-gray-500 text-xs">
+                Bats: {simulationRef.current.metrics.batCount} |
+                Clusters: {simulationRef.current.metrics.clusterCount}
+              </div>
+              <div className="text-gray-500 text-xs">
+                Velocity: {(simulationRef.current.metrics.averageVelocity * 100).toFixed(0)}% |
+                Chaos: {(simulationRef.current.metrics.chaosLevel * 100).toFixed(0)}%
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -266,6 +326,16 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
             className="px-6 py-2 bg-cave-light hover:bg-cave-medium text-gray-300 rounded-lg font-medium transition-colors"
           >
             Reset
+          </button>
+          <button
+            onClick={toggleAudio}
+            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+              audioEnabled
+                ? 'bg-bat-primary hover:bg-bat-secondary text-white'
+                : 'bg-cave-light hover:bg-cave-medium text-gray-300'
+            }`}
+          >
+            Audio: {audioEnabled ? 'ON' : 'OFF'}
           </button>
         </div>
 
@@ -333,6 +403,50 @@ export default function CaveSimulation({ onViewerCountUpdate }: CaveSimulationPr
               className="w-full"
             />
           </div>
+
+          {/* Audio Volume */}
+          <div>
+            <label className="block text-bat-secondary text-sm mb-2">
+              Audio Volume: {(masterVolume * 100).toFixed(0)}%
+            </label>
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.1"
+              value={masterVolume}
+              onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+              className="w-full"
+              disabled={!audioEnabled}
+            />
+          </div>
+        </div>
+
+        {/* Behavior Mode */}
+        <div>
+          <label className="block text-bat-secondary text-sm mb-2">Behavior Mode</label>
+          <div className="flex flex-wrap gap-2">
+            {(['calm', 'roosting', 'foraging', 'panic', 'chaos'] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setBehaviorMode(mode)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  behaviorMode === mode
+                    ? 'bg-bat-primary text-white'
+                    : 'bg-cave-medium text-gray-400 hover:bg-cave-light'
+                }`}
+              >
+                {mode.charAt(0).toUpperCase() + mode.slice(1)}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            {behaviorMode === 'calm' && 'Balanced flocking with gentle movement'}
+            {behaviorMode === 'roosting' && 'Tight clustering with minimal movement'}
+            {behaviorMode === 'foraging' && 'Active exploration with dispersed behavior'}
+            {behaviorMode === 'panic' && 'Chaotic scattering from disturbances'}
+            {behaviorMode === 'chaos' && 'Unpredictable emergent patterns'}
+          </p>
         </div>
 
         {/* Presets */}
